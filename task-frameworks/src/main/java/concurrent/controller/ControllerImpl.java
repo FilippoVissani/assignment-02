@@ -10,11 +10,11 @@ import java.util.Optional;
 public class ControllerImpl implements Controller{
     private final Model model;
     private Optional<View> view;
-    private final SimulationManager simulationManager;
+    private final SimulationService simulationService;
 
     public ControllerImpl(final Model model, final long iterations, final Optional<Integer> workersNumber) {
         this.model = model;
-        this.simulationManager = new SimulationManager(model, this, iterations, workersNumber);
+        this.simulationService = new SimulationService(model, this, iterations, workersNumber);
         this.view = Optional.empty();
     }
 
@@ -32,11 +32,11 @@ public class ControllerImpl implements Controller{
 
     @Override
     public void startSimulation() {
-        new Thread(this.simulationManager, "MASTER").start();
+        new Thread(this.simulationService, "MASTER").start();
     }
 
     @Override
     public void stopSimulation() {
-        this.simulationManager.stopSimulation();
+        this.simulationService.stopSimulation();
     }
 }
