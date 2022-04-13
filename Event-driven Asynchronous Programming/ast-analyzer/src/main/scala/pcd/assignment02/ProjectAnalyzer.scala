@@ -1,43 +1,62 @@
 package pcd.assignment02
 
 import io.vertx.core.*
-
 import java.util.function.Consumer
 
 trait ProjectAnalyzer:
 
     /**
+     * Async method to retrieve the report about a specific interface,
+     * given the full path of the interface source file
+     *
+     * @param interfacePath
+     * @return
+     */
+    def interfaceReport(interfacePath: String): Future[InterfaceReport]
+    
+    /**
      * Async method to retrieve the report about a specific class,
      * given the full path of the class source file
      *
-     * @param srcClassPath
+     * @param classPath
      * @return
      */
-    def getClassReport(srcClassPath: String): Future[ClassReport]
+    def classReport(classPath: String): Future[ClassReport]
 
     /**
      * Async method to retrieve the report about a package,
      * given the full path of the package folder
      *
-     * @param srcPackagePath
+     * @param packagePath
      * @return
      */
-    def getPackageReport(srcPackagePath: String): Future[PackageReport]
+    def packageReport(packagePath: String): Future[PackageReport]
 
     /**
      * Async method to retrieve the report about a project
      * given the full path of the project folder
      *
-     * @param srcProjectFolderPath
+     * @param projectFolderPath
      * @return
      */
-    def getProjectReport(srcProjectFolderPath: String): Future[ProjectReport]
+    def projectReport(projectFolderPath: String): Future[ProjectReport]
 
     /**
      * Async function that analyze a project given the full path of the project folder,
      * executing the callback each time a project element is found
      *
-     * @param srcProjectFolderName
+     * @param projectFolderName
      * @param callback
      */
-    def analyzeProject(srcProjectFolderName: String, callback: Consumer[ProjectElem]): Unit
+    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit
+
+object ProjectAnalyzer:
+    def interfaceReport(interfacePath: String): Future[InterfaceReport] = ???
+    
+    def classReport(classPath: String): Future[ClassReport] = ???
+
+    def packageReport(packagePath: String): Future[PackageReport] = ???
+
+    def projectReport(projectFolderPath: String): Future[ProjectReport] = ???
+
+    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit = ???

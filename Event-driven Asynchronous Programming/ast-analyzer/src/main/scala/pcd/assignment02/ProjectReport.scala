@@ -1,6 +1,11 @@
 package pcd.assignment02
 
 trait ProjectReport:
-    def getMainClass(): ClassReport
-    def getAllClasses(): List[ClassReport]
-    def getClassReport(fullClassName: String): ClassReport
+    def mainClass: ClassReport
+    def packagesReport: List[PackageReport]
+    def classReport(fullClassName: String): ClassReport
+
+object ProjectReport:
+    def apply(): ProjectReport = ???
+
+//    case class ProjectReportImpl() extends ProjectReport
