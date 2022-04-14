@@ -10,9 +10,6 @@ class InterfaceCollector extends VoidVisitorAdapter[MutableInterfaceReport]:
             super.visit(n, arg)
             arg.name = Option.apply(n.getNameAsString)
             arg.path = Option.apply(n.getFullyQualifiedName.get())
+            n.getMethods.forEach(method => arg.methodsInfo = method.getNameAsString :: arg.methodsInfo)
         else
             throw IllegalArgumentException("argument n is not an interface declaration")
-
-    override def visit(n: MethodDeclaration, arg: MutableInterfaceReport): Unit =
-        super.visit(n, arg)
-        arg.methodsInfo = arg.methodsInfo.appendedAll(List(n.getNameAsString))

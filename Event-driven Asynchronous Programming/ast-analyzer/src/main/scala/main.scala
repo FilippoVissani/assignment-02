@@ -11,9 +11,9 @@ import scala.concurrent.Future
 class MyVerticle extends AbstractVerticle:
     override def start(): Unit =
         val future = ProjectAnalyzer(getVertx).interfaceReport("src/main/java/pcd/assignment02/TestInterface.java")
-        println("1")
-        future.onComplete(result => println(result))
-        println("2")
+        println("1 " + Thread.currentThread().getName)
+        future.onComplete(result => println(result.toString + " " + Thread.currentThread().getName))
+        println("2 " + Thread.currentThread().getName)
 
 @main
 def main(): Unit =
