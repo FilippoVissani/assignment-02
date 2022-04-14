@@ -8,4 +8,4 @@ trait ProjectReport:
 object ProjectReport:
     def apply(): ProjectReport = ???
 
-//    case class ProjectReportImpl() extends ProjectReport
+//  private case class ProjectReportImpl() extends ProjectReport
