@@ -3,13 +3,16 @@ package pcd.assignment02
 trait PackageReport:
     def name: String
     def path: String
-    def classesReport: List[ClassReport]
+    def methods: List[MethodInfo]
+    def fields: List[FieldInfo]
 
 object PackageReport:
     def apply(name: String,
               path: String,
-              classesReport: List[ClassReport]): PackageReport = PackageReportImpl(name, path, classesReport)
+              methods: List[MethodInfo],
+              fields: List[FieldInfo]): PackageReport = PackageReportImpl(name, path, methods, fields)
     
     private case class PackageReportImpl(override val name: String,
                                          override val path: String,
-                                         override val classesReport: List[ClassReport]) extends PackageReport
+                                         override val methods: List[MethodInfo],
+                                         override val fields: List[FieldInfo]) extends PackageReport
