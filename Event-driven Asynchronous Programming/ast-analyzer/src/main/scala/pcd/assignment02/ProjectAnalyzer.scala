@@ -60,18 +60,20 @@ object ProjectAnalyzer:
 
         override def interfaceReport(interfacePath: String): Future[InterfaceReport] =
             vertx.executeBlocking(promise => {
-                val compilationUnit = StaticJavaParser.parse(File(interfacePath))
-                val interfaceCollector = InterfaceCollector()
                 val interfaceReport = MutableInterfaceReport()
-                interfaceCollector.visit(compilationUnit, interfaceReport)
+                InterfaceCollector().visit(StaticJavaParser.parse(File(interfacePath)), interfaceReport)
                 promise.complete(interfaceReport.immutableInterfaceReport())
             })
 
-        override def classReport(classPath: String): Future[ClassReport] = ???
+        override def classReport(classPath: String): Future[ClassReport] =
+            vertx.executeBlocking(promise => {
+                val classReport = MutableClassReport()
+                ClassCollector().visit(StaticJavaParser.parse(File(classPath)), classReport)
+                promise.complete(classReport.immutableClassReport())
+            })
 
         override def packageReport(packagePath: String): Future[PackageReport] = ???
 
         override def projectReport(projectFolderPath: String): Future[ProjectReport] = ???
 
         override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit = ???
-
