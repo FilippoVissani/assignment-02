@@ -6,14 +6,12 @@ import pcd.assignment02.{InterfaceCollector, InterfaceReport, MutableInterfaceRe
 import java.io.File
 import io.vertx.core.Vertx
 
-import scala.concurrent.Future
-
 class MyVerticle extends AbstractVerticle:
     override def start(): Unit =
         val future = ProjectAnalyzer(getVertx).interfaceReport("src/main/java/pcd/assignment02/TestInterface.java")
         future.onComplete(result => println(result.toString))
         val future2 = ProjectAnalyzer(getVertx).classReport("src/main/java/pcd/assignment02/Pair.java")
-        future2.onComplete(result => println(result.toString))
+        future2.onComplete(result => println(result.result().fieldsInfo.foreach(f => println(f))))
 
 @main
 def main(): Unit =

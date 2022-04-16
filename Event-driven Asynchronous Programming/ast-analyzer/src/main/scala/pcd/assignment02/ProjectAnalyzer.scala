@@ -60,16 +60,16 @@ object ProjectAnalyzer:
 
         override def interfaceReport(interfacePath: String): Future[InterfaceReport] =
             vertx.executeBlocking(promise => {
-                val interfaceReport = MutableInterfaceReport()
+                val interfaceReport: MutableInterfaceReport = MutableInterfaceReport("", "", List())
                 InterfaceCollector().visit(StaticJavaParser.parse(File(interfacePath)), interfaceReport)
-                promise.complete(interfaceReport.immutableInterfaceReport())
+                promise.complete(interfaceReport)
             })
 
         override def classReport(classPath: String): Future[ClassReport] =
             vertx.executeBlocking(promise => {
-                val classReport = MutableClassReport()
+                val classReport = MutableClassReport("", "", List(), List())
                 ClassCollector().visit(StaticJavaParser.parse(File(classPath)), classReport)
-                promise.complete(classReport.immutableClassReport())
+                promise.complete(classReport)
             })
 
         override def packageReport(packagePath: String): Future[PackageReport] = ???
