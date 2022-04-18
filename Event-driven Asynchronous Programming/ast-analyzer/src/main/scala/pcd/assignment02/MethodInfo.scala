@@ -5,6 +5,8 @@ trait MethodInfo:
     def beginLine: Int
     def endLine: Int
     def parent: ClassReport
+    override def toString: String =
+        s"name: $name, beginLine: $beginLine, endLine: $endLine, parent: ${parent.name}"
 
 trait MutableMethodInfo extends MethodInfo:
     def name_(name: String): Unit
