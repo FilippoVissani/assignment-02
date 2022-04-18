@@ -13,7 +13,7 @@ trait MutablePackageReport extends PackageReport:
 object MutablePackageReport:
     def apply(name: String,
               classes: List[ClassReport],
-              interfaces: List[InterfaceReport]): PackageReport = MutablePackageReportImpl(name, classes, interfaces)
+              interfaces: List[InterfaceReport]): MutablePackageReport = MutablePackageReportImpl(name, classes, interfaces)
     
     private case class MutablePackageReportImpl(var _name: String,
                                                 var _classes: List[ClassReport],
