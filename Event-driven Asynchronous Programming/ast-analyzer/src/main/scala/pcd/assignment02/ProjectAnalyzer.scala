@@ -78,29 +78,12 @@ object ProjectAnalyzer:
             }, false)
 
         override def packageReport(packagePath: String): Future[PackageReport] =
-
-            //OLD
-            val listaDiClassi = File(packagePath).listFiles()
-            var listaDiFuture: java.util.List[Future[?]] = java.util.ArrayList()
-            listaDiClassi.foreach(classe => {
-                listaDiFuture.add(classReport(classe.getAbsolutePath))
-            })
-
-            //NEW TODO
-            /*val futuresList: Vector[Future[?]] = File(packagePath).listFiles().toVector.map(classe => {
-                classReport(classe.getAbsolutePath)
-            })
-            */
-
+            val futuresList: Vector[Future[?]] = File(packagePath).listFiles().toVector.map(e => classReport(e.getAbsolutePath))
             var packageReport = MutablePackageReport("", List(), List())
-
-            CompositeFuture.all(listaDiFuture.get(1), listaDiFuture.get(2)).onSuccess(res => {
+            CompositeFuture.all(futuresList(1), futuresList(2)).onSuccess(res => {
                 packageReport.classes_(res.result().list().asScala.toList)
             })
-            
             vertx.executeBlocking(promise => {
-
-                //val packageReport = MutablePackageReport("", List(), List())
                 promise.complete(packageReport)
             }, false)
 
