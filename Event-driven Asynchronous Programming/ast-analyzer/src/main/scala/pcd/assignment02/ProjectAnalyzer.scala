@@ -3,9 +3,14 @@ package pcd.assignment02
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
 import io.vertx.core.file.FileSystem
+
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
+
 import java.io.File
+import java.util
+
+import scala.jdk.CollectionConverters._
 
 trait ProjectAnalyzer:
     /**
@@ -63,16 +68,41 @@ object ProjectAnalyzer:
                 val interfaceReport: MutableInterfaceReport = MutableInterfaceReport("", "", List())
                 InterfaceCollector().visit(StaticJavaParser.parse(File(interfacePath)), interfaceReport)
                 promise.complete(interfaceReport)
-            })
+            }, false)
 
         override def classReport(classPath: String): Future[ClassReport] =
             vertx.executeBlocking(promise => {
                 val classReport = MutableClassReport("", "", List(), List())
                 ClassCollector().visit(StaticJavaParser.parse(File(classPath)), classReport)
                 promise.complete(classReport)
+            }, false)
+
+        override def packageReport(packagePath: String): Future[PackageReport] =
+
+            //OLD
+            val listaDiClassi = File(packagePath).listFiles()
+            var listaDiFuture: java.util.List[Future[?]] = java.util.ArrayList()
+            listaDiClassi.foreach(classe => {
+                listaDiFuture.add(classReport(classe.getAbsolutePath))
             })
 
-        override def packageReport(packagePath: String): Future[PackageReport] = ???
+            //NEW TODO
+            /*val futuresList: Vector[Future[?]] = File(packagePath).listFiles().toVector.map(classe => {
+                classReport(classe.getAbsolutePath)
+            })
+            */
+
+            var packageReport = MutablePackageReport("", List(), List())
+
+            CompositeFuture.all(listaDiFuture.get(1), listaDiFuture.get(2)).onSuccess(res => {
+                packageReport.classes_(res.result().list().asScala.toList)
+            })
+            
+            vertx.executeBlocking(promise => {
+
+                //val packageReport = MutablePackageReport("", List(), List())
+                promise.complete(packageReport)
+            }, false)
 
         override def projectReport(projectFolderPath: String): Future[ProjectReport] = ???
 
