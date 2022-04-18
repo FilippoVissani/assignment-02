@@ -4,6 +4,8 @@ trait FieldInfo:
     def name: String
     def fieldType: String
     def parent: ClassReport
+    override def toString: String =
+        s"name: $name, fieldType: $fieldType, parent: ${parent.name}"
 
 trait MutableFieldInfo extends FieldInfo:
     def name_(name: String): Unit
