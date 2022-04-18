@@ -23,4 +23,3 @@ object MutableInterfaceReport:
         override def name_(name: String): Unit = _name = name
         override def path_(path: String): Unit = _path = path
         override def methodsInfo_(methodsInfo: List[String]): Unit = _methodsInfo = methodsInfo
-

@@ -15,4 +15,3 @@ class ClassCollector extends VoidVisitorAdapter[MutableClassReport]:
                 arg.methodsInfo_(MutableMethodInfo(e.getNameAsString, e.getBegin.get().line, e.getEnd.get().line, arg) :: arg.methodsInfo))
         else
             throw IllegalArgumentException("argument n is not a class declaration")
-

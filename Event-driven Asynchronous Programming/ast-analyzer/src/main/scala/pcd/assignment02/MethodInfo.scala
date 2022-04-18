@@ -28,6 +28,3 @@ object MutableMethodInfo:
         override def beginLine_(beginLine: Int): Unit = _beginLine = beginLine
         override def endLine: Int = _endLine
         override def endLine_(endLine: Int): Unit = _endLine = endLine
-
-
-
