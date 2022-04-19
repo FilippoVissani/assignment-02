@@ -3,11 +3,14 @@ package pcd.assignment02
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
 import io.vertx.core.file.FileSystem
+
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
+
 import java.io.File
 import java.util
-import scala.jdk.CollectionConverters._
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.*
 
 trait ProjectAnalyzer:
     /**
@@ -67,7 +70,6 @@ object ProjectAnalyzer:
                     promise.fail("Not an interface declaration")
                 else
                     promise.complete(classOrInterfaceReport.interfaceReport.get)
-
             }, false)
 
         override def classReport(classPath: String): Future[ClassReport] =
@@ -81,15 +83,26 @@ object ProjectAnalyzer:
 
         override def packageReport(packagePath: String): Future[PackageReport] =
             vertx.executeBlocking(promise => {
-                val packageReport = MutablePackageReport(packagePath, List(), List())
-                File(packagePath).listFiles().toList.map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classReport, e.interfaceReport) match
-                        case (Some(_), None) => packageReport.classes_(e.classReport.get :: packageReport.classes)
-                        case (None, Some(_)) => packageReport.interfaces_(e.interfaceReport.get :: packageReport.interfaces)
-                        case _ => promise.fail("Not a class or an interface declaration"))
-                promise.complete(packageReport)
+                try {
+                    promise.complete(analyzePackage(packagePath))
+                } catch {
+                    case e: Exception => promise.fail(e)
+                }
             }, false)
 
-        override def projectReport(projectFolderPath: String): Future[ProjectReport] = ???
+        override def projectReport(projectFolderPath: String): Future[ProjectReport] =
+            vertx.executeBlocking(promise => {
+                try {
+                    val path: String = projectFolderPath + "/src/main/java"
+                    val projectReport = MutableProjectReport(MutableClassReport("", "", List(), List()), List())
+                    val packagesReport = ListBuffer[PackageReport]()
+                    analyzePackageRecursive(path, packagesReport)
+                    projectReport.packagesReport_(packagesReport.toList)
+                    promise.complete(projectReport)
+                } catch {
+                    case e: Exception => promise.fail(e)
+                }
+            }, false)
 
         override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit = ???
 
@@ -97,3 +110,17 @@ object ProjectAnalyzer:
             val classOrInterfaceReport = ClassOrInterfaceReport(Option.empty, Option.empty)
             ClassOrInterfaceCollector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
             classOrInterfaceReport
+
+        private def analyzePackage(path: String): PackageReport =
+            val packageReport = MutablePackageReport("package", List(), List())
+            File(path).listFiles().toList.filter(e => e.isFile).map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classReport, e.interfaceReport) match
+                case (Some(_), None) => packageReport.classes_(e.classReport.get :: packageReport.classes)
+                case (None, Some(_)) => packageReport.interfaces_(e.interfaceReport.get :: packageReport.interfaces)
+                case _ => throw new Exception("Not a class or interface declaration"))
+            packageReport
+
+        private def analyzePackageRecursive(path: String, packagesReport :ListBuffer[PackageReport]): Unit =
+            val current = File(path)
+            if current.isDirectory then
+                packagesReport.addOne(analyzePackage(path))
+                current.listFiles().foreach(p => analyzePackageRecursive(p.getAbsolutePath, packagesReport))
