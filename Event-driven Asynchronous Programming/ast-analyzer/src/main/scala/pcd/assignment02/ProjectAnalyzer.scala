@@ -3,13 +3,10 @@ package pcd.assignment02
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
 import io.vertx.core.file.FileSystem
-
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
-
 import java.io.File
 import java.util
-
 import scala.jdk.CollectionConverters._
 
 trait ProjectAnalyzer:
@@ -65,21 +62,26 @@ object ProjectAnalyzer:
 
         override def interfaceReport(interfacePath: String): Future[InterfaceReport] =
             vertx.executeBlocking(promise => {
-                val interfaceReport: MutableInterfaceReport = MutableInterfaceReport("", "", List())
-                InterfaceCollector().visit(StaticJavaParser.parse(File(interfacePath)), interfaceReport)
-                promise.complete(interfaceReport)
+                val classOrInterfaceReport = analyzeClassOrInterface(interfacePath)
+                if classOrInterfaceReport.interfaceReport.isEmpty then
+                    promise.fail("Not an interface declaration")
+                else
+                    promise.complete(classOrInterfaceReport.interfaceReport.get)
+
             }, false)
 
         override def classReport(classPath: String): Future[ClassReport] =
             vertx.executeBlocking(promise => {
-                val classReport = MutableClassReport("", "", List(), List())
-                ClassCollector().visit(StaticJavaParser.parse(File(classPath)), classReport)
-                promise.complete(classReport)
+                val classOrInterfaceReport = analyzeClassOrInterface(classPath)
+                if classOrInterfaceReport.classReport.isEmpty then
+                    promise.fail("Not an interface declaration")
+                else
+                    promise.complete(classOrInterfaceReport.classReport.get)
             }, false)
 
         override def packageReport(packagePath: String): Future[PackageReport] =
             val futuresList: Vector[Future[?]] = File(packagePath).listFiles().toVector.map(e => classReport(e.getAbsolutePath))
-            var packageReport = MutablePackageReport("", List(), List())
+            val packageReport = MutablePackageReport("", List(), List())
             CompositeFuture.all(futuresList(1), futuresList(2)).onSuccess(res => {
                 packageReport.classes_(res.result().list().asScala.toList)
             })
@@ -90,3 +92,8 @@ object ProjectAnalyzer:
         override def projectReport(projectFolderPath: String): Future[ProjectReport] = ???
 
         override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit = ???
+
+        private def analyzeClassOrInterface(path: String): ClassOrInterfaceReport =
+            val classOrInterfaceReport = ClassOrInterfaceReport(Option.empty, Option.empty)
+            ClassOrInterfaceCollector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+            classOrInterfaceReport

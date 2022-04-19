@@ -2,7 +2,7 @@ import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import io.vertx.core.{AbstractVerticle, Vertx}
-import pcd.assignment02.{ClassReport, InterfaceCollector, InterfaceReport, MethodInfo, MutableClassReport, MutableInterfaceReport, MutableMethodInfo, ProjectAnalyzer}
+import pcd.assignment02.{ClassReport, InterfaceReport, MethodInfo, MutableClassReport, MutableInterfaceReport, MutableMethodInfo, ProjectAnalyzer}
 
 import java.io.File
 
