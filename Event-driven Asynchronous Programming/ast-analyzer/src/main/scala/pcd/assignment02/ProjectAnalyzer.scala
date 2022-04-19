@@ -80,12 +80,12 @@ object ProjectAnalyzer:
             }, false)
 
         override def packageReport(packagePath: String): Future[PackageReport] =
-            val futuresList: Vector[Future[?]] = File(packagePath).listFiles().toVector.map(e => classReport(e.getAbsolutePath))
-            val packageReport = MutablePackageReport("", List(), List())
-            CompositeFuture.all(futuresList(1), futuresList(2)).onSuccess(res => {
-                packageReport.classes_(res.result().list().asScala.toList)
-            })
             vertx.executeBlocking(promise => {
+                val packageReport = MutablePackageReport(packagePath, List(), List())
+                File(packagePath).listFiles().toList.map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classReport, e.interfaceReport) match
+                        case (Some(_), None) => packageReport.classes_(e.classReport.get :: packageReport.classes)
+                        case (None, Some(_)) => packageReport.interfaces_(e.interfaceReport.get :: packageReport.interfaces)
+                        case _ => promise.fail("Not a class or an interface declaration"))
                 promise.complete(packageReport)
             }, false)
 
