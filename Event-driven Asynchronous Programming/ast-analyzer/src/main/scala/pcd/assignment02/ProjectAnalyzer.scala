@@ -3,10 +3,8 @@ package pcd.assignment02
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
 import io.vertx.core.file.FileSystem
-
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
-
 import java.io.File
 import java.util
 import scala.collection.mutable.ListBuffer
@@ -56,7 +54,7 @@ trait ProjectAnalyzer:
      * @param projectFolderName
      * @param callback
      */
-    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit
+    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElement]): Unit
 
 object ProjectAnalyzer:
     def apply(vertx: Vertx): ProjectAnalyzer = ProjectAnalyzerImpl(vertx)
@@ -104,7 +102,7 @@ object ProjectAnalyzer:
                 }
             }, false)
 
-        override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElem]): Unit = ???
+        override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElement]): Unit = ???
 
         private def analyzeClassOrInterface(path: String): ClassOrInterfaceReport =
             val classOrInterfaceReport = ClassOrInterfaceReport(Option.empty, Option.empty)
