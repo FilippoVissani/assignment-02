@@ -96,6 +96,7 @@ object ProjectAnalyzer:
                     val packagesReport = ListBuffer[PackageReport]()
                     analyzePackageRecursive(path, packagesReport)
                     projectReport.packagesReport_(packagesReport.toList)
+                    projectReport.mainClass_(packagesReport.flatMap(p => p.classes).filter(c => c.methodsInfo.map(m => m.name).contains("main")).toVector.head)
                     promise.complete(projectReport)
                 } catch {
                     case e: Exception => promise.fail(e)
@@ -110,7 +111,7 @@ object ProjectAnalyzer:
             classOrInterfaceReport
 
         private def analyzePackage(path: String): PackageReport =
-            val packageReport = MutablePackageReport("package", List(), List())
+            val packageReport = MutablePackageReport(path, List(), List())
             File(path).listFiles().toList.filter(e => e.isFile).map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classReport, e.interfaceReport) match
                 case (Some(_), None) => packageReport.classes_(e.classReport.get :: packageReport.classes)
                 case (None, Some(_)) => packageReport.interfaces_(e.interfaceReport.get :: packageReport.interfaces)
