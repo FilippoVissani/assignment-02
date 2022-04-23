@@ -54,39 +54,32 @@ trait ProjectAnalyzer:
      * @param projectFolderName
      * @param callback
      */
-    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElement]): Unit
+    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElementReport]): Unit
 
 object ProjectAnalyzer:
     def apply(vertx: Vertx): ProjectAnalyzer = ProjectAnalyzerImpl(vertx)
 
     private case class ProjectAnalyzerImpl(vertx: Vertx) extends ProjectAnalyzer:
 
-        override def interfaceReport(interfacePath: String): Future[InterfaceReport] =
+        override def interfaceReport(interfacePath: String): Future[List[InterfaceReport]] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = analyzeClassOrInterface(interfacePath)
-                if classOrInterfaceReport.interfaceReport.isEmpty then
+                if classOrInterfaceReport.interfacesReport.isEmpty then
                     promise.fail("Not an interface declaration")
                 else
-                    promise.complete(classOrInterfaceReport.interfaceReport.get)
+                    promise.complete(classOrInterfaceReport.interfacesReport)
             }, false)
 
-        override def classReport(classPath: String): Future[ClassReport] =
+        override def classReport(classPath: String): Future[List[ClassReport]] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = analyzeClassOrInterface(classPath)
-                if classOrInterfaceReport.classReport.isEmpty then
+                if classOrInterfaceReport.classesReport.isEmpty then
                     promise.fail("Not an interface declaration")
                 else
-                    promise.complete(classOrInterfaceReport.classReport.get)
+                    promise.complete(classOrInterfaceReport.classesReport)
             }, false)
 
-        override def packageReport(packagePath: String): Future[PackageReport] =
-            vertx.executeBlocking(promise => {
-                try {
-                    promise.complete(analyzePackage(packagePath))
-                } catch {
-                    case e: Exception => promise.fail(e)
-                }
-            }, false)
+        override def packageReport(packagePath: String): Future[PackageReport] = ???
 
         override def projectReport(projectFolderPath: String): Future[ProjectReport] =
             vertx.executeBlocking(promise => {
@@ -103,18 +96,18 @@ object ProjectAnalyzer:
                 }
             }, false)
 
-        override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElement]): Unit = ???
+        override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElementReport]): Unit = ???
 
-        private def analyzeClassOrInterface(path: String): ClassOrInterfaceReport =
-            val classOrInterfaceReport = ClassOrInterfaceReport(Option.empty, Option.empty)
-            ClassOrInterfaceCollector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+        private def analyzeClassOrInterface(path: String): FileReport =
+            val classOrInterfaceReport = FileReport()
+            Collector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
             classOrInterfaceReport
 
         private def analyzePackage(path: String): PackageReport =
             val packageReport = MutablePackageReport(path, List(), List())
-            File(path).listFiles().toList.filter(e => e.isFile).map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classReport, e.interfaceReport) match
-                case (Some(_), None) => packageReport.classes_(e.classReport.get :: packageReport.classes)
-                case (None, Some(_)) => packageReport.interfaces_(e.interfaceReport.get :: packageReport.interfaces)
+            File(path).listFiles().toList.filter(e => e.isFile).map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classesReport, e.interfacesReport) match
+                case (Some(_), None) => packageReport.classes_(e.classesReport.get :: packageReport.classes)
+                case (None, Some(_)) => packageReport.interfaces_(e.interfacesReport.get :: packageReport.interfaces)
                 case _ => throw new Exception("Not a class or interface declaration"))
             packageReport
 
@@ -123,3 +116,4 @@ object ProjectAnalyzer:
             if current.isDirectory then
                 packagesReport.addOne(analyzePackage(path))
                 current.listFiles().foreach(p => analyzePackageRecursive(p.getAbsolutePath, packagesReport))
+
