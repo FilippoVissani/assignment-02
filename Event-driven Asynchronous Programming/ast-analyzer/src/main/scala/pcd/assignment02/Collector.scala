@@ -24,7 +24,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
                     interfaceReport.methodsInfo_(methodInfo.name :: interfaceReport.methodsInfo)
                 else
                     generateClassReportIfNotPresent(declaration.getNameAsString, declaration.getFullyQualifiedName.get(), arg)
-                    val classReport = arg.classesReport.filter(i => i.fullName == declaration.getFullyQualifiedName.get()).toVector.head
+                    val classReport = arg.classesReport.filter(i => i.fullName == declaration.getFullyQualifiedName.get()).toVector.head ;
                     if methodInfo.name == "main" then classReport.isMainClass_(true)
                     methodInfo.parentID_(classReport.fullName)
                     classReport.methodsInfo_(methodInfo :: classReport.methodsInfo)
@@ -61,6 +61,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
             interfaceReport.elementType_(ProjectElementType.Interface)
             interfaceReport.name_(name)
             interfaceReport.fullName_(fullName)
+            interfaceReport.parentID_(interfaceReport.fullName.replace(s".${interfaceReport.name}", ""))
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
 
     private def methodVisibility_(methodInfo: MutableMethodInfoImpl, n: MethodDeclaration): Unit =

@@ -3,11 +3,16 @@ package pcd.assignment02
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
 import io.vertx.core.file.FileSystem
+
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
+import io.vertx.core
+
 import java.io.File
 import java.util
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.concurrent
 import scala.jdk.CollectionConverters.*
 
 trait ProjectAnalyzer:
@@ -18,7 +23,7 @@ trait ProjectAnalyzer:
      * @param interfacePath
      * @return
      */
-    def interfaceReport(interfacePath: String): Future[InterfaceReport]
+    def interfaceReport(interfacePath: String): Future[List[InterfaceReport]]
     
     /**
      * Async method to retrieve the report about a specific class,
@@ -27,7 +32,7 @@ trait ProjectAnalyzer:
      * @param classPath
      * @return
      */
-    def classReport(classPath: String): Future[ClassReport]
+    def classReport(classPath: String): Future[List[ClassReport]]
 
     /**
      * Async method to retrieve the report about a package,
@@ -61,6 +66,8 @@ object ProjectAnalyzer:
 
     private case class ProjectAnalyzerImpl(vertx: Vertx) extends ProjectAnalyzer:
 
+        val sourcesRoot = "src/main/java/"
+
         override def interfaceReport(interfacePath: String): Future[List[InterfaceReport]] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = analyzeClassOrInterface(interfacePath)
@@ -79,21 +86,39 @@ object ProjectAnalyzer:
                     promise.complete(classOrInterfaceReport.classesReport)
             }, false)
 
-        override def packageReport(packagePath: String): Future[PackageReport] = ???
+        override def packageReport(packagePath: String): Future[PackageReport] =
+            vertx.executeBlocking(promise => {
+                val filesReport: java.util.List[Future[?]] = java.util.ArrayList()
+                File(packagePath).listFiles().toList.filter(f => f.isFile).foreach(f => filesReport.add(analyzeClassOrInterfaceFuture(f.getPath)))
+                CompositeFuture.all(filesReport).onSuccess(result => {
+                    val packageReport: MutablePackageReportImpl = MutablePackageReportImpl()
+                    result.result().list().asScala.foreach(e => e match
+                        case fileReport: FileReport => packageReport.classes_(packageReport.classes.appendedAll(fileReport.classesReport))
+                        case _ => throw Exception(""))
+                    result.result().list().asScala.foreach(e => e match
+                        case fileReport: FileReport => packageReport.interfaces_(packageReport.interfaces.appendedAll(fileReport.interfacesReport))
+                        case _ => throw Exception(""))
+                    val absolutePath = File(packagePath).getAbsolutePath
+                    packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
+                    packageReport.elementType_(ProjectElementType.Package)
+                    packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
+                    val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
+                    if parentID != packageReport.name then packageReport.parentID_(parentID)
+                    promise.complete(packageReport)
+                })
+            }, false)
 
         override def projectReport(projectFolderPath: String): Future[ProjectReport] =
             vertx.executeBlocking(promise => {
-                try {
-                    val path: String = projectFolderPath + "/src/main/java"
-                    val projectReport = MutableProjectReport(MutableClassReport("", "", List(), List()), List())
-                    val packagesReport = ListBuffer[PackageReport]()
-                    analyzePackageRecursive(path, packagesReport)
-                    projectReport.packagesReport_(packagesReport.toList)
-                    projectReport.mainClass_(packagesReport.flatMap(p => p.classes).filter(c => c.methodsInfo.map(m => m.name).contains("main")).toVector.head)
+                val directories = analyzeFileSystemRecursive(s"$projectFolderPath$sourcesRoot")
+                val packagesReport: java.util.List[Future[?]] = directories.map(f => packageReport(f)).asJava
+                CompositeFuture.all(packagesReport).onSuccess(result =>{
+                    val projectReport: MutableProjectReportImpl = MutableProjectReportImpl()
+                    result.result().list().asScala.foreach(e => e match
+                        case packageReport: PackageReport => projectReport.packagesReport_(packageReport :: projectReport.packagesReport)
+                        case _ => throw Exception(""))
                     promise.complete(projectReport)
-                } catch {
-                    case e: Exception => promise.fail(e)
-                }
+                })
             }, false)
 
         override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElementReport]): Unit = ???
@@ -103,17 +128,19 @@ object ProjectAnalyzer:
             Collector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
             classOrInterfaceReport
 
-        private def analyzePackage(path: String): PackageReport =
-            val packageReport = MutablePackageReport(path, List(), List())
-            File(path).listFiles().toList.filter(e => e.isFile).map(e => analyzeClassOrInterface(e.getAbsolutePath)).foreach(e => (e.classesReport, e.interfacesReport) match
-                case (Some(_), None) => packageReport.classes_(e.classesReport.get :: packageReport.classes)
-                case (None, Some(_)) => packageReport.interfaces_(e.interfacesReport.get :: packageReport.interfaces)
-                case _ => throw new Exception("Not a class or interface declaration"))
-            packageReport
+        private def analyzeClassOrInterfaceFuture(path: String): Future[FileReport] =
+            vertx.executeBlocking(promise => {
+                val classOrInterfaceReport = FileReport()
+                Collector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+                promise.complete(classOrInterfaceReport)
+            }, false)
 
-        private def analyzePackageRecursive(path: String, packagesReport :ListBuffer[PackageReport]): Unit =
-            val current = File(path)
-            if current.isDirectory then
-                packagesReport.addOne(analyzePackage(path))
-                current.listFiles().foreach(p => analyzePackageRecursive(p.getAbsolutePath, packagesReport))
+        private def analyzeFileSystemRecursive(path: String): List[String] =
+            def _analyzeFileSystemRecursive(path: String, packages: ListBuffer[String]): Unit =
+                val directories = File(path).listFiles().filter(f => f.isDirectory).map(d => d.getAbsolutePath)
+                packages.addAll(directories)
+                directories.foreach(d => _analyzeFileSystemRecursive(d, packages))
 
+            val directories: ListBuffer[String] = ListBuffer()
+            _analyzeFileSystemRecursive(path, directories)
+            directories.toList
