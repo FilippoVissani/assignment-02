@@ -2,17 +2,10 @@ package pcd.assignment02
 
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
-import io.vertx.core.file.FileSystem
-
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
-import io.vertx.core
-
 import java.io.File
-import java.util
-import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
-import scala.concurrent
 import scala.jdk.CollectionConverters.*
 
 trait ProjectAnalyzer:
