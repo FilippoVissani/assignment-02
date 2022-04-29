@@ -1,4 +1,6 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
+
+import pcd.assignment02.*
 
 object Logger:
     def logMethod(methodInfo: MethodInfo): Unit =
@@ -17,4 +19,4 @@ object Logger:
         logMessage(s"[PACKAGE] => ${packageReport.fullName}")
 
     private def logMessage(message: String): Unit =
-        println(s"${message}\t${Thread.currentThread().getName}")
+        println(s"${Thread.currentThread().getName}\t\t${message}")

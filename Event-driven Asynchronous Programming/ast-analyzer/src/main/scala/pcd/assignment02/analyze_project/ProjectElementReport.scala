@@ -1,4 +1,6 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
+
+import pcd.assignment02.*
 
 enum ProjectElementType:
     case Package, Interface, Class, Method, Field

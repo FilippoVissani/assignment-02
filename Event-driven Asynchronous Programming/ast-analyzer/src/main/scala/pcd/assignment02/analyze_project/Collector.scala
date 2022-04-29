@@ -1,8 +1,9 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
+import pcd.assignment02.*
 
 class Collector extends VoidVisitorAdapter[FileReport]:
 

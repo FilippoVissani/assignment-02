@@ -1,8 +1,10 @@
+package pcd.assignment02.gui_application
+
 import com.github.javaparser.StaticJavaParser
-import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
+import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import io.vertx.core.{AbstractVerticle, Promise, Vertx}
-import pcd.assignment02.{Collector, FileReport, ProjectAnalyzer}
+import pcd.assignment02.analyze_project.{Collector, FileReport, ProjectAnalyzer}
 
 import java.io.File
 import java.lang.Thread
@@ -23,4 +25,5 @@ class MyVerticle extends AbstractVerticle:
 def main(): Unit =
     val vertx: Vertx = Vertx.vertx()
     vertx.deployVerticle(MyVerticle())
+
 

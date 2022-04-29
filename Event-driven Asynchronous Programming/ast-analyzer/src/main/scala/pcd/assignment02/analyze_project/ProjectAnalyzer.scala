@@ -1,10 +1,12 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
 
+import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
-import java.util.function.Consumer
-import com.github.javaparser.StaticJavaParser
+import pcd.assignment02.*
+
 import java.io.File
+import java.util.function.Consumer
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
 
@@ -52,7 +54,7 @@ trait ProjectAnalyzer:
      * @param projectFolderName
      * @param callback
      */
-    def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElementReport]): Unit
+    def analyzeProject(projectFolderName: String, topic: String): Unit
 
 object ProjectAnalyzer:
     def apply(vertx: Vertx): ProjectAnalyzer = ProjectAnalyzerImpl(vertx)
@@ -97,6 +99,7 @@ object ProjectAnalyzer:
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                     val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
+                    Logger.logPackage(packageReport)
                     promise.complete(packageReport)
                 })
             }, false)
@@ -114,7 +117,13 @@ object ProjectAnalyzer:
                 })
             }, false)
 
-        override def analyzeProject(projectFolderName: String, callback: Consumer[ProjectElementReport]): Unit = ???
+        override def analyzeProject(projectFolderName: String, topic: String): Unit =
+            vertx.executeBlocking(promise => {
+
+
+                vertx.eventBus().publish(topic, "a")
+                promise.complete()
+            }, false)
 
         private def analyzeClassOrInterface(path: String): FileReport =
             val classOrInterfaceReport = FileReport()
