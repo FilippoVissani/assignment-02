@@ -29,6 +29,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
                     methodInfo.parentID_(classReport.fullName)
                     classReport.methodsInfo_(methodInfo :: classReport.methodsInfo)
             case _ => )
+        Logger.logMethod(methodInfo)
 
     override def visit(n: FieldDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
@@ -45,6 +46,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
                     fieldInfo.parentID_(classReport.fullName)
                     classReport.fieldsInfo_(fieldInfo :: classReport.fieldsInfo)
             case _ => )
+        Logger.logField(fieldInfo)
 
     private def generateClassReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
         if !arg.classesReport.map(c => c.fullName).contains(fullName) then
@@ -54,6 +56,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
             classReport.fullName_(fullName)
             classReport.parentID_(classReport.fullName.replace(s".${classReport.name}", ""))
             arg.classesReport = classReport :: arg.classesReport
+            Logger.logClass(classReport)
 
     private def generateInterfaceReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
         if !arg.interfacesReport.map(i => i.fullName).contains(fullName) then
@@ -63,6 +66,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
             interfaceReport.fullName_(fullName)
             interfaceReport.parentID_(interfaceReport.fullName.replace(s".${interfaceReport.name}", ""))
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
+            Logger.logInterface(interfaceReport)
 
     private def methodVisibility_(methodInfo: MutableMethodInfoImpl, n: MethodDeclaration): Unit =
         if n.isPublic then methodInfo.visibility_(Visibility.Public)
