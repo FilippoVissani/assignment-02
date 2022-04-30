@@ -1,4 +1,4 @@
-package pcd.assignment02.analyze_project
+package pcd.assignment02.project_analyzer
 
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
@@ -111,7 +111,7 @@ object ProjectAnalyzer:
 
         override def projectReport(projectFolderPath: String): Future[ProjectReport] =
             vertx.executeBlocking(promise => {
-                val directories = analyzeFileSystemRecursive(s"$projectFolderPath$sourcesRoot")
+                val directories = analyzeFileSystemRecursive(s"$projectFolderPath/$sourcesRoot")
                 val packagesReport: java.util.List[Future[?]] = directories.map(f => packageReport(f)).asJava
                 CompositeFuture.all(packagesReport).onSuccess(result =>{
                     val projectReport: MutableProjectReportImpl = MutableProjectReportImpl()
@@ -124,11 +124,6 @@ object ProjectAnalyzer:
 
         override def analyzeProject(projectFolderName: String): Unit =
             projectReport(projectFolderName)
-            /*vertx.executeBlocking(promise => {
-                projectReport(projectFolderName).onSuccess(_ =>{
-                    promise.complete()
-                })
-            }, false)*/
 
         private def analyzeClassOrInterface(path: String): FileReport =
             val classOrInterfaceReport = FileReport()
@@ -138,6 +133,7 @@ object ProjectAnalyzer:
         private def analyzeClassOrInterfaceFuture(path: String): Future[FileReport] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = FileReport()
+                //TODO: DEBUG
                 val fakeTime = Random.between(0, 12000)
                 println(fakeTime + " " + path)
                 Thread.sleep(fakeTime)

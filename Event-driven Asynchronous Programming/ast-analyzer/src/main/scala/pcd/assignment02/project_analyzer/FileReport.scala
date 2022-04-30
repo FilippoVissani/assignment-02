@@ -1,4 +1,4 @@
-package pcd.assignment02.analyze_project
+package pcd.assignment02.project_analyzer
 
 class FileReport:
     var classesReport: List[MutableClassReport] = List()
