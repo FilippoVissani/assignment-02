@@ -1,14 +1,20 @@
-package pcd.assignment02.analyze_project
+package pcd.assignment02
 
-import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
-import pcd.assignment02.*
+import io.vertx.core.file.FileSystem
+
+import java.util.function.Consumer
+import com.github.javaparser.StaticJavaParser
+import io.vertx.core
 
 import java.io.File
-import java.util.function.Consumer
+import java.util
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.concurrent
 import scala.jdk.CollectionConverters.*
+import scala.util.Random
 
 trait ProjectAnalyzer:
     /**
@@ -54,7 +60,7 @@ trait ProjectAnalyzer:
      * @param projectFolderName
      * @param callback
      */
-    def analyzeProject(projectFolderName: String, topic: String): Unit
+    def analyzeProject(projectFolderName: String): Unit
 
 object ProjectAnalyzer:
     def apply(vertx: Vertx): ProjectAnalyzer = ProjectAnalyzerImpl(vertx)
@@ -99,7 +105,7 @@ object ProjectAnalyzer:
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                     val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
-                    Logger.logPackage(packageReport)
+                    vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.fullName)
                     promise.complete(packageReport)
                 })
             }, false)
@@ -117,23 +123,33 @@ object ProjectAnalyzer:
                 })
             }, false)
 
-        override def analyzeProject(projectFolderName: String, topic: String): Unit =
+        override def analyzeProject(projectFolderName: String): Unit =
             vertx.executeBlocking(promise => {
-
-
-                vertx.eventBus().publish(topic, "a")
-                promise.complete()
+                val directories = analyzeFileSystemRecursive(s"$projectFolderName/$sourcesRoot")
+                val packagesReport: java.util.List[Future[?]] = directories.map(f => packageReport(f)).asJava
+                CompositeFuture.all(packagesReport).onSuccess(_ =>{
+                    promise.complete()
+                })
             }, false)
 
         private def analyzeClassOrInterface(path: String): FileReport =
             val classOrInterfaceReport = FileReport()
-            Collector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+            Collector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
             classOrInterfaceReport
 
         private def analyzeClassOrInterfaceFuture(path: String): Future[FileReport] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = FileReport()
-                Collector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+                val fakeTime = Random.between(0, 12000)
+                println(fakeTime + " " + path)
+                Thread.sleep(fakeTime)
+                Collector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+                classOrInterfaceReport.interfacesReport.foreach(i => {
+                    vertx.eventBus().publish("FileReport", i.fullName+" tempo impiegato: "+fakeTime)
+                })
+                classOrInterfaceReport.classesReport.foreach(c => {
+                    vertx.eventBus().publish("FileReport", c.fullName+" tempo impiegato: "+fakeTime)
+                })
                 promise.complete(classOrInterfaceReport)
             }, false)
 
