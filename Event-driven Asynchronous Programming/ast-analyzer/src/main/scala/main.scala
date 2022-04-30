@@ -2,7 +2,7 @@ import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import io.vertx.core.{AbstractVerticle, Promise, Vertx}
-import pcd.assignment02.{Collector, FileReport, ProjectAnalyzer, ProjectElementType}
+import pcd.assignment02.analyze_project.{Collector, FileReport, ProjectAnalyzer, ProjectElementType}
 
 import java.io.File
 import java.lang.Thread
@@ -33,9 +33,6 @@ class verticleConsumer extends AbstractVerticle:
         eventBus.consumer(ProjectElementType.Interface.toString, message => {
             println("[interfaceReport] " + message.body.toString)
         })
-        eventBus.consumer(ProjectElementType.Package.toString, message => {
-            println("[PACKAGE] " + message.body.toString)
-        })
 
 @main
 def main(): Unit =
@@ -48,7 +45,7 @@ def main(): Unit =
     })
 
     //simulo pressione STOP dopo 3 secondi
-    Thread.sleep(3000)
+    Thread.sleep(30000)
     vertx.deploymentIDs().forEach(deploymentId => {
         vertx.undeploy(deploymentId, res =>
             if res.failed then

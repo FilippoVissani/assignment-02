@@ -1,4 +1,4 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, FieldDeclaration, MethodDeclaration}

@@ -1,4 +1,4 @@
-package pcd.assignment02
+package pcd.assignment02.analyze_project
 
 import com.github.javaparser.ast.CompilationUnit
 import io.vertx.core.*
@@ -105,7 +105,6 @@ object ProjectAnalyzer:
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                     val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
-                    vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.fullName)
                     promise.complete(packageReport)
                 })
             }, false)
@@ -124,13 +123,12 @@ object ProjectAnalyzer:
             }, false)
 
         override def analyzeProject(projectFolderName: String): Unit =
-            vertx.executeBlocking(promise => {
-                val directories = analyzeFileSystemRecursive(s"$projectFolderName/$sourcesRoot")
-                val packagesReport: java.util.List[Future[?]] = directories.map(f => packageReport(f)).asJava
-                CompositeFuture.all(packagesReport).onSuccess(_ =>{
+            projectReport(projectFolderName)
+            /*vertx.executeBlocking(promise => {
+                projectReport(projectFolderName).onSuccess(_ =>{
                     promise.complete()
                 })
-            }, false)
+            }, false)*/
 
         private def analyzeClassOrInterface(path: String): FileReport =
             val classOrInterfaceReport = FileReport()
