@@ -1,11 +1,11 @@
-package pcd.assignment02.analyze_project
+package pcd.assignment02
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
-import pcd.assignment02.*
+import io.vertx.core.Vertx
 
-class Collector extends VoidVisitorAdapter[FileReport]:
+class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
 
     override def visit(n: MethodDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
@@ -30,7 +30,7 @@ class Collector extends VoidVisitorAdapter[FileReport]:
                     methodInfo.parentID_(classReport.fullName)
                     classReport.methodsInfo_(methodInfo :: classReport.methodsInfo)
             case _ => )
-        Logger.logMethod(methodInfo)
+        vertx.eventBus().publish(ProjectElementType.Method.toString, methodInfo.fullName)
 
     override def visit(n: FieldDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
@@ -47,7 +47,8 @@ class Collector extends VoidVisitorAdapter[FileReport]:
                     fieldInfo.parentID_(classReport.fullName)
                     classReport.fieldsInfo_(fieldInfo :: classReport.fieldsInfo)
             case _ => )
-        Logger.logField(fieldInfo)
+        vertx.eventBus().publish(ProjectElementType.Field.toString, fieldInfo.fullName)
+
 
     private def generateClassReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
         if !arg.classesReport.map(c => c.fullName).contains(fullName) then
@@ -56,8 +57,8 @@ class Collector extends VoidVisitorAdapter[FileReport]:
             classReport.name_(name)
             classReport.fullName_(fullName)
             classReport.parentID_(classReport.fullName.replace(s".${classReport.name}", ""))
+            vertx.eventBus().publish(ProjectElementType.Class.toString, classReport.fullName)
             arg.classesReport = classReport :: arg.classesReport
-            Logger.logClass(classReport)
 
     private def generateInterfaceReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
         if !arg.interfacesReport.map(i => i.fullName).contains(fullName) then
@@ -66,8 +67,8 @@ class Collector extends VoidVisitorAdapter[FileReport]:
             interfaceReport.name_(name)
             interfaceReport.fullName_(fullName)
             interfaceReport.parentID_(interfaceReport.fullName.replace(s".${interfaceReport.name}", ""))
+            vertx.eventBus().publish(ProjectElementType.Interface.toString, interfaceReport.fullName)
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
-            Logger.logInterface(interfaceReport)
 
     private def methodVisibility_(methodInfo: MutableMethodInfoImpl, n: MethodDeclaration): Unit =
         if n.isPublic then methodInfo.visibility_(Visibility.Public)
