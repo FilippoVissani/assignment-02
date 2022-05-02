@@ -1,36 +1,65 @@
 package pcd.assignment02.gui_application.view
 
-import javafx.scene.control.TextArea
-import scalafx.scene.Scene
-import scalafx.scene.layout.GridPane
-import scalafx.scene.paint.Color.{DarkGray, White}
-import scalafx.scene.text.{Text, TextFlow}
-import scalafx.scene.control.Button
-import scalafx.stage.Stage
-import scalafx.geometry.Insets
+import java.awt.{BorderLayout, Component, FlowLayout}
+import javax.swing.{JButton, JFileChooser, JFrame, JOptionPane, JPanel, JScrollPane, JTextArea, JTextField, SwingUtilities}
 
-trait GraphicalUserInterface
+trait GraphicalUserInterface extends JFrame:
+    def display(element: String): Unit
 
 object GraphicalUserInterface:
-    def apply(graphicalView: View, stage: Stage, width: Int, height: Int): GraphicalUserInterface =
-        stage.title = "ScalaFX Hello World"
-        stage.height = height
-        stage.width = width
-        stage.scene = new Scene:
-            fill = DarkGray
-            content = new GridPane:
-                padding = Insets(5, 5, 5, 5)
-                hgap = 10
-                vgap = 10
-                val startButton: Button = new Button:
-                    text = "START"
-                val stopButton: Button = new Button:
-                    text = "STOP"
-                add(startButton, 0, 0)
-                add(stopButton, 1, 0)
-                add(TextArea("Test"), 0, 1, 2, 1)
-        GraphicalUserInterfaceImpl(graphicalView, stage)
+    def apply(view: View, width: Int, height: Int): GraphicalUserInterface =
+        val mainPanel = MainPanel(view)
+        val frame = GraphicalUserInterfaceImpl(view, mainPanel)
+        frame.setTitle("Project Analyzer")
+        frame.setSize(width, height)
+        frame.setResizable(false)
+        mainPanel.setSize(width, height)
+        frame.getContentPane.add(mainPanel)
+        frame.pack()
+        frame.setVisible(true)
+        frame
 
-    private class GraphicalUserInterfaceImpl(val graphicalView: View,
-                                             val stage: Stage) extends GraphicalUserInterface
+    private class GraphicalUserInterfaceImpl(val view: View, val mainPanel: MainPanel) extends GraphicalUserInterface:
+        override def display(element: String): Unit = SwingUtilities.invokeAndWait(() => mainPanel.display(element))
 
+trait MainPanel extends JPanel:
+    def display(element: String): Unit
+
+object MainPanel:
+    def apply(view: View): MainPanel =
+        val report: JTextArea = JTextArea(50, 100)
+        val mainPanel = MainPanelImpl(report)
+        val topPane = JPanel()
+        val centerPane = JScrollPane(report)
+        val bottomPane = JPanel()
+        val filesButton: JButton = JButton("File")
+        val path: JTextField = JTextField(50)
+        val startButton: JButton = JButton("Start")
+        val stopButton: JButton = JButton("Stop")
+        filesButton.addActionListener(_ => {
+            val fileChooser = JFileChooser()
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+            if fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION then
+                path.setText(fileChooser.getSelectedFile.getAbsolutePath)
+            else
+                JOptionPane.showMessageDialog(mainPanel.getParent, "Project folder was not selected!",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        })
+        startButton.addActionListener(_ => {
+            view.start(path.getText)
+        })
+        stopButton.addActionListener(_ =>{
+            view.stop()
+        })
+        topPane.add(filesButton)
+        topPane.add(path)
+        topPane.add(startButton)
+        topPane.add(stopButton)
+        mainPanel.setLayout(BorderLayout())
+        mainPanel.add(topPane, BorderLayout.NORTH)
+        mainPanel.add(centerPane, BorderLayout.CENTER)
+        mainPanel.add(bottomPane, BorderLayout.SOUTH)
+        mainPanel
+
+    private class MainPanelImpl(textArea: JTextArea) extends MainPanel:
+        override def display(element: String): Unit = textArea.append(element + "\n")

@@ -133,17 +133,7 @@ object ProjectAnalyzer:
         private def analyzeClassOrInterfaceFuture(path: String): Future[FileReport] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = FileReport()
-                //TODO: DEBUG
-                val fakeTime = Random.between(0, 12000)
-                println(fakeTime + " " + path)
-                Thread.sleep(fakeTime)
                 Collector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
-                classOrInterfaceReport.interfacesReport.foreach(i => {
-                    vertx.eventBus().publish("FileReport", i.fullName+" tempo impiegato: "+fakeTime)
-                })
-                classOrInterfaceReport.classesReport.foreach(c => {
-                    vertx.eventBus().publish("FileReport", c.fullName+" tempo impiegato: "+fakeTime)
-                })
                 promise.complete(classOrInterfaceReport)
             }, false)
 
