@@ -7,8 +7,9 @@ import io.vertx.core.file.FileSystem
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
 import io.vertx.core
+import org.json.simple.JSONObject
 
-import java.io.File
+import java.io.{File, StringWriter}
 import java.util
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -105,6 +106,7 @@ object ProjectAnalyzer:
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                     val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
+                    vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.toJson)
                     promise.complete(packageReport)
                 })
             }, false)

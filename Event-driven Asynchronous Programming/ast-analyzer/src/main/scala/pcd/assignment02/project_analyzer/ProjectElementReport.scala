@@ -1,6 +1,9 @@
 package pcd.assignment02.project_analyzer
 
+import org.json.simple.JSONObject
 import pcd.assignment02.*
+
+import java.io.StringWriter
 
 enum ProjectElementType:
     case Package, Interface, Class, Method, Field
@@ -13,6 +16,16 @@ trait ProjectElementReport:
     def fullName: String
     def parentID: Option[String]
     def elementType: ProjectElementType
+    def toJson: String =
+        val map: java.util.Map[String, String] = java.util.HashMap()
+        map.put("name", this.name)
+        map.put("fullName", this.fullName)
+        map.put("elementType", this.elementType.toString)
+        if this.parentID.isDefined then map.put("parentID", this.parentID.get)
+        val obj: JSONObject = JSONObject(map)
+        val out: StringWriter = StringWriter()
+        obj.writeJSONString(out)
+        out.toString
 end ProjectElementReport
 
 trait PackageReport extends ProjectElementReport:

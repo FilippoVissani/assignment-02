@@ -1,30 +1,29 @@
 package pcd.assignment02.gui_application.model
 
-import pcd.assignment02.gui_application.model.Node.Leaf
+import scala.annotation.tailrec
+import scala.collection.mutable
 
-enum Node[A]:
-    case Subtree(e: A, c: List[Node[A]])
-    case Leaf(e: A)
-
-    def element: A = this match
-        case Subtree(e, _) => e
-        case Leaf(e) => e
-
-    def children: Option[List[Node[A]]] = this match
-        case Subtree(_, c) => Some(c)
-        case Leaf(_) => None
-
-    def addChild(child: Node[A]): Node[A] = this match
-        case Subtree(e, c) => Subtree(e, child :: c)
-        case Leaf(e) => Subtree(e, List(child))
-
-    def addChildren(children: List[Node[A]]): Node[A] = this match
-        case Subtree(e, c) => Subtree(e, c ::: children)
-        case Leaf(e) => Subtree(e, children)
-
-    def foreach(consumer: A => Unit): Unit = this match
-        case Subtree(e, c) => consumer(e); c.foreach(n => n.foreach(consumer))
-        case _ =>
+trait Node[A]:
+    def element: A
+    def children: List[Node[A]]
+    def addChild(child: Node[A]): Node[A]
+    def addChildren(children: List[Node[A]]): Node[A]
+    def map[B](fun: A => B): Node[B]
+    def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit
 
 object Node:
-    def apply[A](e: A): Node[A] = Leaf(e)
+    def apply[A](element: A, children: List[Node[A]]): Node[A] = NodeImpl[A](element, children)
+
+    private case class NodeImpl[A](override val element: A,
+                                   override val children: List[Node[A]]) extends Node[A]:
+
+        override def addChild(child: Node[A]): Node[A] = Node(element, child :: children)
+
+        override def addChildren(_children: List[Node[A]]): Node[A] = Node(element, children ::: _children)
+
+        override def map[B](fun: A => B): Node[B] = Node(fun(element), children.map(c => c.map(fun)))
+
+        override def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit =
+            builder.append(tabs + element + "\n")
+            children.foreach(c => c.temporaryName(builder, tabs + "      "))
+

@@ -28,6 +28,7 @@ trait MainPanel extends JPanel:
 object MainPanel:
     def apply(view: View): MainPanel =
         val report: JTextArea = JTextArea(50, 100)
+        report.setEditable(false)
         val mainPanel = MainPanelImpl(report)
         val topPane = JPanel()
         val centerPane = JScrollPane(report)
@@ -62,4 +63,6 @@ object MainPanel:
         mainPanel
 
     private class MainPanelImpl(textArea: JTextArea) extends MainPanel:
-        override def display(element: String): Unit = textArea.append(element + "\n")
+        override def display(element: String): Unit =
+            textArea.setText("")
+            textArea.append(element + "\n")

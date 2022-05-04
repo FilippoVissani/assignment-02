@@ -8,5 +8,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "ast-analyzer",
       libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.24.2",
-      libraryDependencies += "io.vertx" % "vertx-core" % "4.2.6"
+      libraryDependencies += "io.vertx" % "vertx-core" % "4.2.6",
+      libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1.1"
   )
