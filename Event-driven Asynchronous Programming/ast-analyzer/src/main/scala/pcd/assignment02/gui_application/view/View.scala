@@ -1,11 +1,13 @@
 package pcd.assignment02.gui_application.view
 
 import pcd.assignment02.gui_application.controller.Controller
+import pcd.assignment02.gui_application.model.Node
+import pcd.assignment02.project_analyzer.ProjectElementReport
 
 trait View:
     def start(path: String): Unit
     def stop(): Unit
-    def display(element: String): Unit
+    def displayRoots(roots: List[Node[ProjectElementReport]]): Unit
 
 object View:
     def apply(controller: Controller, width: Int,  height: Int): View =
@@ -15,10 +17,10 @@ object View:
                            val width: Int,
                            val height: Int) extends View:
 
-        val gui: GraphicalUserInterface = GraphicalUserInterface(this, width, height)
+        val gui: GraphicalUserInterface = GraphicalUserInterfaceImpl(this, width, height)
 
         override def start(path: String): Unit = controller.startProjectAnalysis(path)
 
         override def stop(): Unit = controller.stopProjectAnalysis()
 
-        override def display(element: String): Unit = gui.display(element)
+        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = gui.displayRoots(roots)

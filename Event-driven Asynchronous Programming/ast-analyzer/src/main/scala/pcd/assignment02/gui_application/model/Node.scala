@@ -10,6 +10,7 @@ trait Node[A]:
     def addChildren(children: List[Node[A]]): Node[A]
     def map[B](fun: A => B): Node[B]
     def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit
+    def foreach(consumer: A => Unit): Unit
 
 object Node:
     def apply[A](element: A, children: List[Node[A]]): Node[A] = NodeImpl[A](element, children)
@@ -26,4 +27,8 @@ object Node:
         override def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit =
             builder.append(tabs + element + "\n")
             children.foreach(c => c.temporaryName(builder, tabs + "      "))
+
+        override def foreach(consumer: A => Unit): Unit =
+            consumer(element)
+            children.foreach(c => c.foreach(consumer))
 

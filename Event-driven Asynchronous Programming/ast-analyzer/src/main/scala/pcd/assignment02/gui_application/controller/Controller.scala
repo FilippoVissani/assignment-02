@@ -12,7 +12,7 @@ trait Controller:
     def stopVerticle(): Unit
     def startProjectAnalysis(path: String): Unit
     def stopProjectAnalysis(): Unit
-    def displayTree(element: List[Node[ProjectElementReport]]): Unit
+    def displayRoots(element: List[Node[ProjectElementReport]]): Unit
     def view_(view: View): Unit
 
 object Controller:
@@ -32,9 +32,7 @@ object Controller:
 
         override def stopProjectAnalysis(): Unit = stopVerticle()
 
-        override def displayTree(roots: List[Node[ProjectElementReport]]): Unit =
-            val stringBuilder: mutable.StringBuilder = mutable.StringBuilder()
-            roots.map(r => r.map(e => e.name)).foreach(r => r.temporaryName(stringBuilder, ""))
-            _view.get.display(stringBuilder.toString())
+        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit =
+            _view.get.displayRoots(roots)
 
         override def view_(view: View): Unit = _view = Option(view)

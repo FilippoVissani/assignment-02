@@ -46,7 +46,7 @@ object ControllerVerticle:
             if obj.asInstanceOf[JSONObject].get("parentID") != null then
                 element.parentID_(obj.asInstanceOf[JSONObject].get("parentID").toString)
             _treeGenerator.addNode(Node(element, List()))
-            controller.displayTree(_treeGenerator.generateTree((p, c) => c.parentID match
+            controller.displayRoots(_treeGenerator.generateTree((p, c) => c.parentID match
                 case Some(parentID) => p.fullName == parentID
                 case _ => false))
     end ControllerVerticleImpl
