@@ -12,7 +12,7 @@ object ControllerVerticle:
     def apply(controller: Controller): ControllerVerticle = ControllerVerticleImpl(controller)
 
     private class ControllerVerticleImpl(val controller: Controller) extends ControllerVerticle:
-        val _treeGenerator: TreeGenerator[ProjectElementReport] = TreeGenerator((a, b) => a.fullName > b.fullName)
+        val _treeGenerator: TreeGenerator[ProjectElementReport] = TreeGenerator(Ordering.by[ProjectElementReport, String](_.fullName).reverse)
 
         override def start(startPromise: Promise[Void]): Unit =
             val eventBus = getVertx.eventBus()

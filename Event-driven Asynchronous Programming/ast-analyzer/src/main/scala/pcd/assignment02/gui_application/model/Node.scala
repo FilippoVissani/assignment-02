@@ -9,7 +9,7 @@ trait Node[A]:
     def addChild(child: Node[A]): Node[A]
     def addChildren(children: List[Node[A]]): Node[A]
     def map[B](fun: A => B): Node[B]
-    def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit
+    def nodeToString(builder: mutable.StringBuilder, tabs: String): Unit
     def foreach(consumer: A => Unit): Unit
 
 object Node:
@@ -24,9 +24,9 @@ object Node:
 
         override def map[B](fun: A => B): Node[B] = Node(fun(element), children.map(c => c.map(fun)))
 
-        override def temporaryName(builder: mutable.StringBuilder, tabs: String): Unit =
+        override def nodeToString(builder: mutable.StringBuilder, tabs: String): Unit =
             builder.append(tabs + element + "\n")
-            children.foreach(c => c.temporaryName(builder, tabs + "      "))
+            children.foreach(c => c.nodeToString(builder, tabs + "      "))
 
         override def foreach(consumer: A => Unit): Unit =
             consumer(element)

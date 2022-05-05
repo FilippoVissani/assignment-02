@@ -104,7 +104,7 @@ object ProjectAnalyzer:
                     packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
                     packageReport.elementType_(ProjectElementType.Package)
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
-                    val parentID = packageReport.fullName.replaceAll(s".${packageReport.name}", "")
+                    val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
                     vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.toJson)
                     promise.complete(packageReport)

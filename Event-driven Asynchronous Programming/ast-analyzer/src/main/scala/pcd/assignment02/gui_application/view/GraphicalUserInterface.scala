@@ -2,7 +2,6 @@ package pcd.assignment02.gui_application.view
 
 import pcd.assignment02.gui_application.model.Node
 import pcd.assignment02.project_analyzer.{ProjectElementReport, ProjectElementType}
-
 import java.awt.{BorderLayout, Component, FlowLayout}
 import javax.swing.{BoxLayout, JButton, JFileChooser, JFrame, JLabel, JOptionPane, JPanel, JScrollPane, JTextArea, JTextField, SwingUtilities}
 import scala.collection.mutable
@@ -26,12 +25,11 @@ class GraphicalUserInterfaceImpl(val view: View, width: Int, height: Int) extend
         setResizable(false)
         mainPanel.setSize(width, height)
         getContentPane.add(mainPanel)
-        pack()
         setVisible(true)
 
         override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = SwingUtilities.invokeAndWait(() => {
             val stringBuilder: mutable.StringBuilder = mutable.StringBuilder()
-            roots.map(r => r.map(e => e.name)).foreach(r => r.temporaryName(stringBuilder, ""))
+            roots.map(r => r.map(e => e.name)).foreach(r => r.nodeToString(stringBuilder, ""))
             mainPanel.report.setText(stringBuilder.toString())
             var packages: Int = 0
             var classes: Int = 0

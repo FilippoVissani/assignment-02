@@ -58,7 +58,7 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
             classReport.elementType_(ProjectElementType.Class)
             classReport.name_(name)
             classReport.fullName_(fullName)
-            classReport.parentID_(classReport.fullName.replace(s".${classReport.name}", ""))
+            classReport.parentID_(classReport.fullName.replaceAll("." + classReport.name + "$", ""))
             vertx.eventBus().publish(ProjectElementType.Class.toString, classReport.toJson)
             arg.classesReport = classReport :: arg.classesReport
 
@@ -68,7 +68,7 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
             interfaceReport.elementType_(ProjectElementType.Interface)
             interfaceReport.name_(name)
             interfaceReport.fullName_(fullName)
-            interfaceReport.parentID_(interfaceReport.fullName.replace(s".${interfaceReport.name}", ""))
+            interfaceReport.parentID_(interfaceReport.fullName.replaceAll("." + interfaceReport.name + "$", ""))
             vertx.eventBus().publish(ProjectElementType.Interface.toString, interfaceReport.toJson)
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
 
