@@ -27,9 +27,9 @@ class GraphicalUserInterfaceImpl(val view: View, width: Int, height: Int) extend
         getContentPane.add(mainPanel)
         setVisible(true)
 
-        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = SwingUtilities.invokeAndWait(() => {
+        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = SwingUtilities.invokeLater(() => {
             val stringBuilder: mutable.StringBuilder = mutable.StringBuilder()
-            roots.map(r => r.map(e => e.name)).foreach(r => r.nodeToString(stringBuilder, ""))
+            roots.map(r => r.map(e => s"[${e.elementType.toString.toUpperCase}] => ${e.name}")).foreach(r => r.nodeToString(stringBuilder, ""))
             mainPanel.report.setText(stringBuilder.toString())
             var packages: Int = 0
             var classes: Int = 0
