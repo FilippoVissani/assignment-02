@@ -106,7 +106,6 @@ object ProjectAnalyzer:
                     packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                     val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
                     if parentID != packageReport.name then packageReport.parentID_(parentID)
-                    vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.toJson)
                     promise.complete(packageReport)
                 })
             }, false)
@@ -124,18 +123,52 @@ object ProjectAnalyzer:
                 })
             }, false)
 
+        private def packageReportEventBus(packagePath: String): Unit =
+            vertx.executeBlocking(promise => {
+                val filesReport: java.util.List[Future[?]] = java.util.ArrayList()
+                File(packagePath).listFiles().toList.filter(f => f.isFile).foreach(f => filesReport.add(analyzeClassOrInterfaceEventBus(f.getPath)))
+                CompositeFuture.all(filesReport).onSuccess(result => {
+                    val packageReport: MutablePackageReportImpl = MutablePackageReportImpl()
+                    result.result().list().asScala.foreach(e => e match
+                        case fileReport: FileReport => packageReport.classes_(packageReport.classes.appendedAll(fileReport.classesReport))
+                        case _ => throw Exception(""))
+                    result.result().list().asScala.foreach(e => e match
+                        case fileReport: FileReport => packageReport.interfaces_(packageReport.interfaces.appendedAll(fileReport.interfacesReport))
+                        case _ => throw Exception(""))
+                    val absolutePath = File(packagePath).getAbsolutePath
+                    packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
+                    packageReport.elementType_(ProjectElementType.Package)
+                    packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
+                    val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
+                    if parentID != packageReport.name then packageReport.parentID_(parentID)
+                    vertx.eventBus().publish(ProjectElementType.Package.toString, packageReport.toJson)
+                    promise.complete()
+                })
+            }, false)
+
         override def analyzeProject(projectFolderName: String): Unit =
-            projectReport(projectFolderName)
+            vertx.executeBlocking(promise => {
+                val directories = analyzeFileSystemRecursive(s"$projectFolderName/$sourcesRoot")
+                directories.foreach(f => packageReportEventBus(f))
+                promise.complete()
+            }, false)
 
         private def analyzeClassOrInterface(path: String): FileReport =
             val classOrInterfaceReport = FileReport()
-            Collector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+            FutureCollector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
             classOrInterfaceReport
 
         private def analyzeClassOrInterfaceFuture(path: String): Future[FileReport] =
             vertx.executeBlocking(promise => {
                 val classOrInterfaceReport = FileReport()
-                Collector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+                FutureCollector().visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
+                promise.complete(classOrInterfaceReport)
+            }, false)
+
+        private def analyzeClassOrInterfaceEventBus(path: String): Future[FileReport] =
+            vertx.executeBlocking(promise => {
+                val classOrInterfaceReport = FileReport()
+                EventBusCollector(vertx).visit(StaticJavaParser.parse(File(path)), classOrInterfaceReport)
                 promise.complete(classOrInterfaceReport)
             }, false)
 

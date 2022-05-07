@@ -5,10 +5,10 @@ import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, FieldDeclara
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import io.vertx.core.Vertx
 import org.json.simple.JSONObject
+
 import java.io.StringWriter
 
-class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
-
+abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
     override def visit(n: MethodDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
         val methodInfo = MutableMethodInfoImpl()
@@ -32,7 +32,7 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
                     methodInfo.parentID_(classReport.fullName)
                     classReport.methodsInfo_(methodInfo :: classReport.methodsInfo)
             case _ => )
-        vertx.eventBus().publish(ProjectElementType.Method.toString, methodInfo.toJson)
+        publishOnEventBus(ProjectElementType.Method.toString, methodInfo.toJson)
 
     override def visit(n: FieldDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
@@ -49,7 +49,7 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
                     fieldInfo.parentID_(classReport.fullName)
                     classReport.fieldsInfo_(fieldInfo :: classReport.fieldsInfo)
             case _ => )
-        vertx.eventBus().publish(ProjectElementType.Field.toString, fieldInfo.toJson)
+        publishOnEventBus(ProjectElementType.Field.toString, fieldInfo.toJson)
 
 
     private def generateClassReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
@@ -59,7 +59,7 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
             classReport.name_(name)
             classReport.fullName_(fullName)
             classReport.parentID_(classReport.fullName.replaceAll("." + classReport.name + "$", ""))
-            vertx.eventBus().publish(ProjectElementType.Class.toString, classReport.toJson)
+            publishOnEventBus(ProjectElementType.Class.toString, classReport.toJson)
             arg.classesReport = classReport :: arg.classesReport
 
     private def generateInterfaceReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
@@ -69,10 +69,28 @@ class Collector(val vertx: Vertx) extends VoidVisitorAdapter[FileReport]:
             interfaceReport.name_(name)
             interfaceReport.fullName_(fullName)
             interfaceReport.parentID_(interfaceReport.fullName.replaceAll("." + interfaceReport.name + "$", ""))
-            vertx.eventBus().publish(ProjectElementType.Interface.toString, interfaceReport.toJson)
+            publishOnEventBus(ProjectElementType.Interface.toString, interfaceReport.toJson)
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
 
     private def methodVisibility_(methodInfo: MutableMethodInfoImpl, n: MethodDeclaration): Unit =
         if n.isPublic then methodInfo.visibility_(Visibility.Public)
         if n.isPrivate then methodInfo.visibility_(Visibility.Private)
         if n.isProtected then methodInfo.visibility_(Visibility.Protected)
+
+    protected def publishOnEventBus(projectElementType: String, projectElement: String): Unit
+end AbstractCollector
+
+
+class EventBusCollector(val vertx: Vertx) extends AbstractCollector:
+
+    override protected def publishOnEventBus(projectElementType: String, projectElement: String): Unit =
+        vertx.eventBus().publish(projectElementType, projectElement)
+
+end EventBusCollector
+
+
+class FutureCollector extends AbstractCollector:
+
+    override protected def publishOnEventBus(projectElementType: String, projectElement: String): Unit = {}
+
+end FutureCollector
