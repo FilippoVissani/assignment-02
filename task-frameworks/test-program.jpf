@@ -1,7 +1,0 @@
-target = pcd.assignment02.concurrent.simulation.SimulationApp
-
-classpath = build/classes/java/main
-
-listener = gov.nasa.jpf.listener.PreciseRaceDetector
-
-report.console.property_violation = error,trace
