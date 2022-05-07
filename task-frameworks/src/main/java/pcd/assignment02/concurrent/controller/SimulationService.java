@@ -29,7 +29,7 @@ public class SimulationService implements Runnable {
         this.iterations = iterations;
         this.chronometer = new ChronometerImpl();
         this.stop = new AtomicBoolean(false);
-        this.threadsNumber = poolSize.isPresent() ? poolSize.get() : Runtime.getRuntime().availableProcessors() + 1;
+        this.threadsNumber = poolSize.orElseGet(() -> Runtime.getRuntime().availableProcessors() + 1);
         this.executor = Executors.newFixedThreadPool(threadsNumber);
         this.tasks = this.generateTasks(this.threadsNumber);
     }
