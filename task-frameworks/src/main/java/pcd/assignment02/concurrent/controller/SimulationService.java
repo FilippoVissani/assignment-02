@@ -17,7 +17,7 @@ public class SimulationService implements Runnable {
     private final Model model;
     private final ViewController controller;
     private final long iterations;
-    //private final Chronometer chronometer;
+    private final Chronometer chronometer;
     private final AtomicBoolean stop;
     private final int threadsNumber;
     private final Map<String, List<Callable<Boolean>>> tasks;
@@ -27,7 +27,7 @@ public class SimulationService implements Runnable {
         this.model = model;
         this.controller = controller;
         this.iterations = iterations;
-        //this.chronometer = new ChronometerImpl();
+        this.chronometer = new ChronometerImpl();
         this.stop = new AtomicBoolean(false);
         this.threadsNumber = poolSize.isPresent() ? poolSize.get() : Runtime.getRuntime().availableProcessors() + 1;
         this.executor = Executors.newFixedThreadPool(threadsNumber);
@@ -36,9 +36,9 @@ public class SimulationService implements Runnable {
 
     @Override
     public void run() {
-        //Logger.logSimulationStarted();
+        Logger.logSimulationStarted();
         long iteration = 0;
-        //this.chronometer.start();
+        this.chronometer.start();
         while (iteration < iterations && !this.stop.get()) {
             try {
                 for (Future<Boolean> result : executor.invokeAll(tasks.get(UpdateSpeedTask.class.getName()))){
@@ -54,14 +54,13 @@ public class SimulationService implements Runnable {
                 e.printStackTrace();
             }
         }
-        //this.chronometer.stop();
+        this.chronometer.stop();
         this.executor.shutdown();
-        /*
         Logger.logSimulationResult(model.getBodiesPositions().size(),
                 iterations,
                 this.chronometer.getTime(),
                 this.threadsNumber);
-        Logger.logProgramTerminated();*/
+        Logger.logProgramTerminated();
     }
 
     public synchronized void stopSimulation() {
