@@ -1,4 +1,4 @@
-package pcd.assignment02.concurrent.simulation;
+package pcd.assignment02.concurrent.app;
 
 import pcd.assignment02.concurrent.controller.ControllerImpl;
 import pcd.assignment02.concurrent.model.ModelImpl;
