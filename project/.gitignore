@@ -102,3 +102,4 @@ project/plugins/project/
 .history
 .cache
 .lib/
+/simulation.log
