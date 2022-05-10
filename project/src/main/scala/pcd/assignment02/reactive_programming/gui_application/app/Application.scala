@@ -20,7 +20,7 @@ object Application:
           .blockingSubscribe(report => report.packagesReport.foreach(p => p.classes.foreach(c => println(c.fullName))))
 */
         val pa = ProjectAnalyzer()
-        pa.channel.observeOn(Schedulers.single()).subscribe(s => println(s + Thread.currentThread()))
+        pa.channel(ProjectElementType.Class).observeOn(Schedulers.single()).subscribe(s => println(s + Thread.currentThread()))
         println("prima di chiamare analyzeProject")
         pa.analyzeProject("/home/filippo/Documents/UNI/MAGISTRALE/Programmazione Concorrente e Distribuita/repository/java-project-generator")
 

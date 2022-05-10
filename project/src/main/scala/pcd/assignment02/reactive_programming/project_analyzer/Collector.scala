@@ -33,7 +33,7 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
                     methodInfo.parentID_(classReport.fullName)
                     classReport.methodsInfo_(methodInfo :: classReport.methodsInfo)
             case _ => )
-        publishOnEventBus(methodInfo.toJson)
+        publishOnEventBus(ProjectElementType.Method, methodInfo.toJson)
 
     override def visit(n: FieldDeclaration, arg: FileReport): Unit =
         super.visit(n, arg)
@@ -50,7 +50,7 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
                     fieldInfo.parentID_(classReport.fullName)
                     classReport.fieldsInfo_(fieldInfo :: classReport.fieldsInfo)
             case _ => )
-        publishOnEventBus(fieldInfo.toJson)
+        publishOnEventBus(ProjectElementType.Field, fieldInfo.toJson)
 
 
     private def generateClassReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
@@ -60,7 +60,7 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
             classReport.name_(name)
             classReport.fullName_(fullName)
             classReport.parentID_(classReport.fullName.replaceAll("." + classReport.name + "$", ""))
-            publishOnEventBus(classReport.toJson)
+            publishOnEventBus(ProjectElementType.Class, classReport.toJson)
             arg.classesReport = classReport :: arg.classesReport
 
     private def generateInterfaceReportIfNotPresent(name: String, fullName: String, arg: FileReport): Unit =
@@ -70,7 +70,7 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
             interfaceReport.name_(name)
             interfaceReport.fullName_(fullName)
             interfaceReport.parentID_(interfaceReport.fullName.replaceAll("." + interfaceReport.name + "$", ""))
-            publishOnEventBus(interfaceReport.toJson)
+            publishOnEventBus(ProjectElementType.Interface, interfaceReport.toJson)
             arg.interfacesReport = interfaceReport :: arg.interfacesReport
 
     private def methodVisibility_(methodInfo: MutableMethodInfoImpl, n: MethodDeclaration): Unit =
@@ -78,20 +78,20 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
         if n.isPrivate then methodInfo.visibility_(Visibility.Private)
         if n.isProtected then methodInfo.visibility_(Visibility.Protected)
 
-    protected def publishOnEventBus(projectElement: String): Unit
+    protected def publishOnEventBus(projectElementType: ProjectElementType, projectElement: String): Unit
 end AbstractCollector
 
 
-class RxEventBusCollector(channel: PublishSubject[String]) extends AbstractCollector:
+class RxEventBusCollector(channels: Map[ProjectElementType, PublishSubject[String]]) extends AbstractCollector:
 
-    override protected def publishOnEventBus(projectElement: String): Unit =
-        channel.onNext(projectElement)
+    override protected def publishOnEventBus(projectElementType: ProjectElementType, projectElement: String): Unit =
+        channels(projectElementType).onNext(projectElement)
 
 end RxEventBusCollector
 
 
 class FlowableCollector extends AbstractCollector:
 
-    override protected def publishOnEventBus(projectElement: String): Unit = {}
+    override protected def publishOnEventBus(projectElementType: ProjectElementType, projectElement: String): Unit = {}
 
 end FlowableCollector
