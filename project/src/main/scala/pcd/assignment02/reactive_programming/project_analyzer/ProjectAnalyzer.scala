@@ -76,16 +76,16 @@ object ProjectAnalyzer:
     def apply(): ProjectAnalyzer = ProjectAnalyzerImpl()
 
     private class ProjectAnalyzerImpl extends ProjectAnalyzer:
-        var _channel: Map[ProjectElementType, PublishSubject[String]] = Map()
-        _channel += (ProjectElementType.Package -> PublishSubject.create)
-        _channel += (ProjectElementType.Class -> PublishSubject.create)
-        _channel += (ProjectElementType.Interface -> PublishSubject.create)
-        _channel += (ProjectElementType.Field -> PublishSubject.create)
-        _channel += (ProjectElementType.Method -> PublishSubject.create)
+        var _channels: Map[ProjectElementType, PublishSubject[String]] = Map()
+        _channels += (ProjectElementType.Package -> PublishSubject.create)
+        _channels += (ProjectElementType.Class -> PublishSubject.create)
+        _channels += (ProjectElementType.Interface -> PublishSubject.create)
+        _channels += (ProjectElementType.Field -> PublishSubject.create)
+        _channels += (ProjectElementType.Method -> PublishSubject.create)
 
         val sourcesRoot = "src/main/java/"
 
-        override def channel: Map[ProjectElementType, PublishSubject[String]] = _channel
+        override def channel: Map[ProjectElementType, PublishSubject[String]] = _channels
 
         override def interfaceReport(interfacePath: String): Flowable[List[InterfaceReport]] =
             analyzeClassOrInterfaceFlowable(interfacePath).map(f => f.interfacesReport)
@@ -128,7 +128,7 @@ object ProjectAnalyzer:
               .blockingSubscribe(e => {
                   e.map(x => packageReportRxEventBus(x))
                     .foreach(e => e.blockingSubscribe(x => {
-                        _channel(ProjectElementType.Package).onNext(x.toJson)
+                        _channels(ProjectElementType.Package).onNext(x.toJson)
                     }))
               })
 
@@ -160,7 +160,7 @@ object ProjectAnalyzer:
 
         private def analyzeClassOrInterfaceRxEventBus(path: String): Flowable[FileReport] =
             def analyzeClassOrInterface(path: String, fileReport: FileReport): FileReport =
-                RxEventBusCollector(_channel).visit(StaticJavaParser.parse(File(path)), fileReport)
+                RxEventBusCollector(_channels).visit(StaticJavaParser.parse(File(path)), fileReport)
                 fileReport
 
             Flowable.just(FileReport()).observeOn(Schedulers.computation()).map(f => analyzeClassOrInterface(path, f))

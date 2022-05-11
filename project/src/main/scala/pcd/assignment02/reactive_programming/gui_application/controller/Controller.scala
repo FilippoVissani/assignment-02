@@ -1,6 +1,5 @@
 package pcd.assignment02.reactive_programming.gui_application.controller
 
-import io.vertx.core.Vertx
 import pcd.assignment02.reactive_programming.gui_application.model.Node
 import pcd.assignment02.reactive_programming.gui_application.view.View
 import pcd.assignment02.reactive_programming.project_analyzer.{ProjectAnalyzer, ProjectElementReport}
@@ -8,8 +7,8 @@ import pcd.assignment02.reactive_programming.project_analyzer.{ProjectAnalyzer, 
 import scala.collection.mutable
 
 trait Controller:
-    def startVerticle(): Unit
-    def stopVerticle(): Unit
+    def startSubscriber(): Unit
+    def stopSubscriber(): Unit
     def startProjectAnalysis(path: String): Unit
     def stopProjectAnalysis(): Unit
     def displayRoots(element: List[Node[ProjectElementReport]]): Unit
@@ -19,18 +18,16 @@ object Controller:
     def apply(): Controller = ControllerImpl()
 
     private class ControllerImpl extends Controller:
-        val vertx: Vertx = Vertx.vertx()
         var _view: Option[View] = Option.empty
+        val projectAnalyzer: ProjectAnalyzer = ProjectAnalyzer()
+        val rxEventBusSubscriber: RxEventBusSubscriber = RxEventBusSubscriber(this, projectAnalyzer.channel)
+        override def startSubscriber(): Unit = rxEventBusSubscriber.subscribe()
 
-        override def startVerticle(): Unit =
-            vertx.deployVerticle(ControllerVerticle(this))
+        override def stopSubscriber(): Unit = rxEventBusSubscriber.unsubscribe()
 
-        override def stopVerticle(): Unit =
-            vertx.close()
+        override def startProjectAnalysis(path: String): Unit = projectAnalyzer.analyzeProject(path)
 
-        override def startProjectAnalysis(path: String): Unit = ProjectAnalyzer().analyzeProject(path)
-
-        override def stopProjectAnalysis(): Unit = stopVerticle()
+        override def stopProjectAnalysis(): Unit = stopSubscriber()
 
         override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit =
             _view.get.displayRoots(roots)

@@ -13,7 +13,7 @@ object Application:
         val controller: Controller = Controller()
         val view: View = View(controller, (screenSize.width/1.3).toInt, (screenSize.height/1.3).toInt)
         controller.view_(view)
-        controller.startVerticle()
+        controller.startSubscriber()
 
     @main def mainTest(): Unit =
 /*        ProjectAnalyzer().projectReport("/home/filippo/Documents/UNI/MAGISTRALE/Programmazione Concorrente e Distribuita/repository/assignment-02/project")
@@ -21,6 +21,5 @@ object Application:
 */
         val pa = ProjectAnalyzer()
         pa.channel(ProjectElementType.Class).observeOn(Schedulers.single()).subscribe(s => println(s + Thread.currentThread()))
-        println("prima di chiamare analyzeProject")
         pa.analyzeProject("/home/filippo/Documents/UNI/MAGISTRALE/Programmazione Concorrente e Distribuita/repository/java-project-generator")
 
