@@ -1,9 +1,9 @@
 package pcd.assignment02.reactive_programming.project_analyzer
 
-import io.reactivex.rxjava3.functions.Consumer
-import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.functions.Consumer
 import io.reactivex.rxjava3.schedulers.Schedulers
+import io.reactivex.rxjava3.subjects.PublishSubject
 
 object RxEventBus:
   private val channels: Map[ProjectElementType, PublishSubject[String]] = Map(
@@ -20,6 +20,6 @@ object RxEventBus:
     }
 
   def publish(channel: ProjectElementType, message: String): Unit =
-    synchronized{
+    synchronized {
       channels(channel).onNext(message)
     }

@@ -7,9 +7,9 @@ import pcd.assignment02.event_driven_asynchronous_programming.gui_application.vi
 import java.awt.{Dimension, Toolkit}
 
 object Application:
-    @main def main(): Unit =
-        val screenSize: Dimension = Toolkit.getDefaultToolkit.getScreenSize;
-        val controller: Controller = Controller()
-        val view: View = gui_application.view.View(controller, (screenSize.width/1.3).toInt, (screenSize.height/1.3).toInt)
-        controller.view_(view)
-        controller.startVerticle()
+  @main def main(): Unit =
+    val screenSize: Dimension = Toolkit.getDefaultToolkit.getScreenSize
+    val controller: Controller = Controller()
+    val view: View = gui_application.view.View(controller, (screenSize.width / 1.3).toInt, (screenSize.height / 1.3).toInt)
+    controller.view_(view)
+    controller.startVerticle()

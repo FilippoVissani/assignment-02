@@ -5,22 +5,24 @@ import pcd.assignment02.event_driven_asynchronous_programming.gui_application.mo
 import pcd.assignment02.event_driven_asynchronous_programming.project_analyzer.ProjectElementReport
 
 trait View:
-    def start(path: String): Unit
-    def stop(): Unit
-    def displayRoots(roots: List[Node[ProjectElementReport]]): Unit
+  def start(path: String): Unit
+
+  def stop(): Unit
+
+  def displayRoots(roots: List[Node[ProjectElementReport]]): Unit
 
 object View:
-    def apply(controller: Controller, width: Int,  height: Int): View =
-        ViewImpl(controller, width, height)
+  def apply(controller: Controller, width: Int, height: Int): View =
+    ViewImpl(controller, width, height)
 
-    private class ViewImpl(val controller: Controller,
-                           val width: Int,
-                           val height: Int) extends View:
+  private class ViewImpl(val controller: Controller,
+                         val width: Int,
+                         val height: Int) extends View :
 
-        val gui: GraphicalUserInterface = GraphicalUserInterfaceImpl(this, width, height)
+    val gui: GraphicalUserInterface = GraphicalUserInterfaceImpl(this, width, height)
 
-        override def start(path: String): Unit = controller.startProjectAnalysis(path)
+    override def start(path: String): Unit = controller.startProjectAnalysis(path)
 
-        override def stop(): Unit = controller.stopProjectAnalysis()
+    override def stop(): Unit = controller.stopProjectAnalysis()
 
-        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = gui.displayRoots(roots)
+    override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = gui.displayRoots(roots)
