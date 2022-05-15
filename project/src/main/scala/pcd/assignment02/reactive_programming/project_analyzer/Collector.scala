@@ -6,6 +6,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.vertx.core.Vertx
 import org.json.simple.JSONObject
+import pcd.assignment02.reactive_programming.utils.Logger
 
 import java.io.StringWriter
 
@@ -82,13 +83,13 @@ abstract class AbstractCollector extends VoidVisitorAdapter[FileReport]:
 end AbstractCollector
 
 
-class RxEventBusCollector(channels: Map[ProjectElementType, PublishSubject[String]]) extends AbstractCollector:
+class RxEventBusCollector extends AbstractCollector:
 
     override protected def publishOnEventBus(projectElementType: ProjectElementType, projectElement: String): Unit =
-        channels(projectElementType).onNext(projectElement)
+      Logger.logSend(projectElement)
+      RxEventBus.publish(projectElementType, projectElement)
 
 end RxEventBusCollector
-
 
 class FlowableCollector extends AbstractCollector:
 

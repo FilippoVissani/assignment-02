@@ -15,6 +15,7 @@ class GraphicalUserInterfaceImpl(val view: View, width: Int, height: Int) extend
         mainPanel.startButton.addActionListener(_ => {
             mainPanel.startButton.setEnabled(false)
             mainPanel.filesButton.setEnabled(false)
+            mainPanel.stopButton.setEnabled(true)
             view.start(mainPanel.path.getText)
         })
         mainPanel.stopButton.addActionListener(_ =>{
@@ -64,6 +65,7 @@ class MainPanelImpl extends MainPanel:
     val path: JTextField = JTextField(50)
     val startButton: JButton = JButton("Start")
     val stopButton: JButton = JButton("Stop")
+    stopButton.setEnabled(false)
     filesButton.addActionListener(_ => {
         val fileChooser = JFileChooser()
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)

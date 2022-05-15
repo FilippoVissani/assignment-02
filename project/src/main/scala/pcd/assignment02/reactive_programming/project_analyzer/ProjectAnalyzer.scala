@@ -1,14 +1,9 @@
 package pcd.assignment02.reactive_programming.project_analyzer
 
 import com.github.javaparser.ast.CompilationUnit
-import io.vertx.core.*
-import io.vertx.core.file.FileSystem
-
 import java.util.function.Consumer
 import com.github.javaparser.StaticJavaParser
-import io.vertx.core
 import org.json.simple.JSONObject
-
 import java.io.{File, StringWriter}
 import java.util
 import scala.annotation.tailrec
@@ -16,12 +11,13 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent
 import scala.jdk.CollectionConverters.*
 import scala.util.Random
+import io.reactivex.rxjava3.*
 import io.reactivex.rxjava3.core.*
 import io.reactivex.rxjava3.flowables.ConnectableFlowable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
-import io.vertx.core.Promise.promise
 import org.reactivestreams.Publisher
+import pcd.assignment02.reactive_programming.utils.Logger
 
 trait ProjectAnalyzer:
     /**
@@ -68,102 +64,98 @@ trait ProjectAnalyzer:
      * @param callback
      */
     def analyzeProject(projectFolderName: String): Unit
-
-    def channel: Map[ProjectElementType, PublishSubject[String]]
 end ProjectAnalyzer
 
 object ProjectAnalyzer:
     def apply(): ProjectAnalyzer = ProjectAnalyzerImpl()
 
     private class ProjectAnalyzerImpl extends ProjectAnalyzer:
-        var _channels: Map[ProjectElementType, PublishSubject[String]] = Map()
-        _channels += (ProjectElementType.Package -> PublishSubject.create)
-        _channels += (ProjectElementType.Class -> PublishSubject.create)
-        _channels += (ProjectElementType.Interface -> PublishSubject.create)
-        _channels += (ProjectElementType.Field -> PublishSubject.create)
-        _channels += (ProjectElementType.Method -> PublishSubject.create)
 
         val sourcesRoot = "src/main/java/"
 
-        override def channel: Map[ProjectElementType, PublishSubject[String]] = _channels
-
         override def interfaceReport(interfacePath: String): Flowable[List[InterfaceReport]] =
-            analyzeClassOrInterfaceFlowable(interfacePath).map(f => f.interfacesReport)
+            analyzeClassOrInterfaceFlowable(interfacePath)
+              .map(f => f.interfacesReport.map(i => i.asInstanceOf[InterfaceReport]))
+              .subscribeOn(Schedulers.io())
 
         override def classReport(classPath: String): Flowable[List[ClassReport]] =
-            analyzeClassOrInterfaceFlowable(classPath).map(f => f.classesReport)
+            analyzeClassOrInterfaceFlowable(classPath)
+              .map(f => f.classesReport.map(c => c.asInstanceOf[ClassReport]))
+              .subscribeOn(Schedulers.io())
 
         override def packageReport(packagePath: String): Flowable[PackageReport] =
-            Flowable.just(packagePath).observeOn(Schedulers.computation()).map(e => {
-                val packageReport: MutablePackageReportImpl = MutablePackageReportImpl()
-                File(e).listFiles().toList
-                  .filter(e => e.isFile)
-                  .map(e => analyzeClassOrInterfaceFlowable(e.getAbsolutePath))
-                  .map(e => e.blockingSubscribe(x => {
-                      packageReport.classes_(packageReport.classes.appendedAll(x.classesReport))
-                      packageReport.interfaces_(packageReport.interfaces.appendedAll(x.interfacesReport))
-                  }))
-                val absolutePath = File(e).getAbsolutePath
-                packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
-                packageReport.elementType_(ProjectElementType.Package)
-                packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
-                val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
-                if parentID != packageReport.name then packageReport.parentID_(parentID)
-                packageReport
-            })
+          Flowable.just(File(packagePath).listFiles().toList.filter(path => path.isFile).map(file => file.getAbsolutePath))
+            .map(list => {
+              val packageReport = MutablePackageReportImpl()
+              Flowable.merge(list.map(file => analyzeClassOrInterfaceFlowable(file)).asJava)
+                .subscribeOn(Schedulers.io())
+                .blockingSubscribe(s => {
+                  packageReport.classes_(packageReport.classes ::: s.classesReport)
+                  packageReport.interfaces_(packageReport.interfaces ::: s.interfacesReport)
+                })
+              val absolutePath = File(packagePath).getAbsolutePath
+              packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
+              packageReport.elementType_(ProjectElementType.Package)
+              packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
+              val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
+              if parentID != packageReport.name then packageReport.parentID_(parentID)
+              packageReport.asInstanceOf[PackageReport]
+            }).subscribeOn(Schedulers.io())
 
         override def projectReport(projectFolderPath: String): Flowable[ProjectReport] =
-            Flowable.fromCallable(() => {
-                val projectReport: MutableProjectReportImpl = MutableProjectReportImpl()
-                analyzeFileSystemRecursive(s"$projectFolderPath/$sourcesRoot")
-                  .blockingSubscribe(y => {
-                      y.map(x => packageReport(x))
-                        .foreach(e => e.blockingSubscribe(x => projectReport.packagesReport_(x :: projectReport.packagesReport)))
-                  })
-                projectReport
-            })
+          analyzeFileSystemRecursive(s"$projectFolderPath/$sourcesRoot")
+            .map(list => {
+              val projectReport = MutableProjectReportImpl()
+              Flowable.merge(list.map(path => packageReport(path)).asJava)
+                .subscribeOn(Schedulers.io())
+                .blockingSubscribe(s => projectReport.packagesReport_(s :: projectReport.packagesReport))
+              projectReport.asInstanceOf[ProjectReport]
+            }).subscribeOn(Schedulers.io())
 
         override def analyzeProject(projectFolderName: String): Unit =
             analyzeFileSystemRecursive(s"$projectFolderName/$sourcesRoot")
-              .blockingSubscribe(e => {
-                  e.map(x => packageReportRxEventBus(x))
-                    .foreach(e => e.blockingSubscribe(x => {
-                        _channels(ProjectElementType.Package).onNext(x.toJson)
-                    }))
-              })
+              .map(packageList => {
+                  packageList.foreach(packagePath => packageReportRxEventBus(packagePath).subscribe())
+                  packageList
+              }).subscribeOn(Schedulers.io()).subscribe()
 
-        private def packageReportRxEventBus(packagePath: String): Flowable[PackageReport] =
-            Flowable.just(packagePath).observeOn(Schedulers.computation()).map(e => {
-                val packageReport: MutablePackageReportImpl = MutablePackageReportImpl()
-                File(e).listFiles().toList
-                  .filter(e => e.isFile)
-                  .map(e => analyzeClassOrInterfaceRxEventBus(e.getAbsolutePath))
-                  .map(e => e.blockingSubscribe(x => {
-                      packageReport.classes_(packageReport.classes.appendedAll(x.classesReport))
-                      packageReport.interfaces_(packageReport.interfaces.appendedAll(x.interfacesReport))
-                  }))
-                val absolutePath = File(e).getAbsolutePath
+        private def packageReportRxEventBus(packagePath: String): Flowable[MutablePackageReportImpl] =
+            Flowable.just(packagePath)
+              .map(e => File(e)
+                .listFiles()
+                .toList
+                .filter(x => x.isFile)
+                .map(x => x.getAbsolutePath)
+                .map(x => analyzeClassOrInterfaceRxEventBus(x)))
+              .map(e => {
+                Flowable.merge(e.asJava).subscribe()
+                val packageReport = MutablePackageReportImpl()
+                val absolutePath = File(packagePath).getAbsolutePath
                 packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
                 packageReport.elementType_(ProjectElementType.Package)
                 packageReport.fullName_(absolutePath.substring(absolutePath.lastIndexOf(sourcesRoot) + sourcesRoot.length).replaceAll("/", "."))
                 val parentID = packageReport.fullName.replaceAll("." + packageReport.name + "$", "")
                 if parentID != packageReport.name then packageReport.parentID_(parentID)
+                Logger.logSend(packageReport.toJson)
+                RxEventBus.publish(packageReport.elementType, packageReport.toJson)
                 packageReport
-            })
+              }).subscribeOn(Schedulers.io())
 
         private def analyzeClassOrInterfaceFlowable(path: String): Flowable[FileReport] =
-            def analyzeClassOrInterface(path: String, fileReport: FileReport): FileReport =
-                FlowableCollector().visit(StaticJavaParser.parse(File(path)), fileReport)
-                fileReport
-
-            Flowable.just(FileReport()).observeOn(Schedulers.computation()).map(f => analyzeClassOrInterface(path, f))
+          Flowable.just(FileReport())
+            .map(f => {
+              FlowableCollector().visit(StaticJavaParser.parse(File(path)), f)
+              f
+            })
+            .subscribeOn(Schedulers.io())
 
         private def analyzeClassOrInterfaceRxEventBus(path: String): Flowable[FileReport] =
-            def analyzeClassOrInterface(path: String, fileReport: FileReport): FileReport =
-                RxEventBusCollector(_channels).visit(StaticJavaParser.parse(File(path)), fileReport)
-                fileReport
-
-            Flowable.just(FileReport()).observeOn(Schedulers.computation()).map(f => analyzeClassOrInterface(path, f))
+          Flowable.just(FileReport())
+            .map(f => {
+              RxEventBusCollector().visit(StaticJavaParser.parse(File(path)), f)
+              f
+            })
+            .subscribeOn(Schedulers.io())
 
         private def analyzeFileSystemRecursive(path: String): Flowable[List[String]] =
             def _analyzeFileSystemRecursive(path: String, packages: ListBuffer[String]): Unit =
@@ -171,10 +163,10 @@ object ProjectAnalyzer:
                 packages.addAll(directories)
                 directories.foreach(d => _analyzeFileSystemRecursive(d, packages))
 
-            Flowable.just(ListBuffer[String]()).observeOn(Schedulers.computation()).map(e => {
+            Flowable.just(ListBuffer[String]()).map(e => {
                 _analyzeFileSystemRecursive(path, e)
                 e.toList
-            })
+            }).subscribeOn(Schedulers.io())
+
     end ProjectAnalyzerImpl
 end ProjectAnalyzer
-

@@ -1,7 +1,5 @@
 package pcd.assignment02.reactive_programming.project_analyzer
 
-import pcd.assignment02.*
-
 trait ProjectReport:
     def packagesReport: List[PackageReport]
     def classReport(fullClassName: String): Option[ClassReport]

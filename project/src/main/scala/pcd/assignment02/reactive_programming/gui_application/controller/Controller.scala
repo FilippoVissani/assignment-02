@@ -4,8 +4,6 @@ import pcd.assignment02.reactive_programming.gui_application.model.Node
 import pcd.assignment02.reactive_programming.gui_application.view.View
 import pcd.assignment02.reactive_programming.project_analyzer.{ProjectAnalyzer, ProjectElementReport}
 
-import scala.collection.mutable
-
 trait Controller:
     def startSubscriber(): Unit
     def stopSubscriber(): Unit
@@ -20,7 +18,7 @@ object Controller:
     private class ControllerImpl extends Controller:
         var _view: Option[View] = Option.empty
         val projectAnalyzer: ProjectAnalyzer = ProjectAnalyzer()
-        val rxEventBusSubscriber: RxEventBusSubscriber = RxEventBusSubscriber(this, projectAnalyzer.channel)
+        val rxEventBusSubscriber: RxEventBusSubscriber = RxEventBusSubscriber(this)
         override def startSubscriber(): Unit = rxEventBusSubscriber.subscribe()
 
         override def stopSubscriber(): Unit = rxEventBusSubscriber.unsubscribe()
@@ -29,7 +27,6 @@ object Controller:
 
         override def stopProjectAnalysis(): Unit = stopSubscriber()
 
-        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit =
-            _view.get.displayRoots(roots)
+        override def displayRoots(roots: List[Node[ProjectElementReport]]): Unit = _view.get.displayRoots(roots)
 
         override def view_(view: View): Unit = _view = Option(view)
