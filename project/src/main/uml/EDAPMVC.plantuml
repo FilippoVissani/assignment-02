@@ -1,0 +1,101 @@
+@startuml
+
+!theme plain
+top to bottom direction
+
+class Application {
+  + main(): void
+}
+interface Controller << interface >> {
+  + displayRoots(List<Node<ProjectElementReport>>): void
+  + stopVerticle(): void
+  + startVerticle(): void
+  + apply(): Controller
+  + view_(View): void
+  + startProjectAnalysis(String): void
+  + stopProjectAnalysis(): void
+}
+class ControllerImpl {
+  + view_(View): void
+  + stopVerticle(): void
+  + vertx(): Vertx
+  + stopProjectAnalysis(): void
+  + _view(): Option<View>
+  + startVerticle(): void
+  + displayRoots(List<Node<ProjectElementReport>>): void
+  + startProjectAnalysis(String): void
+}
+interface ControllerVerticle << interface >> {
+  + apply(Controller): ControllerVerticle
+}
+class ControllerVerticleImpl {
+  + _treeGenerator(): TreeGenerator<ProjectElementReport>
+  + controller(): Controller
+  + start(Promise<Void>): void
+  + addNode(String): void
+}
+interface GraphicalUserInterface << interface >> {
+  + displayRoots(List<Node<ProjectElementReport>>): void
+}
+class GraphicalUserInterfaceImpl {
+  + mainPanel(): MainPanelImpl
+  + view(): View
+  + displayRoots(List<Node<ProjectElementReport>>): void
+}
+interface MainPanel << interface >>
+class MainPanelImpl {
+  + fields(): JLabel
+  + stopButton(): JButton
+  + bottomPane(): JPanel
+  + path(): JTextField
+  + methods(): JLabel
+  + topPane(): JPanel
+  + interfaces(): JLabel
+  + classes(): JLabel
+  + packages(): JLabel
+  + centerPane(): JScrollPane
+  + filesButton(): JButton
+  + startButton(): JButton
+  + report(): JTextArea
+}
+interface ProjectAnalyzer << interface >> {
+  + analyzeProject(String): void
+  + projectReport(String): Future<ProjectReport>
+  + packageReport(String): Future<PackageReport>
+  + interfaceReport(String): Future<List<InterfaceReport>>
+  + classReport(String): Future<List<ClassReport>>
+  + apply(Vertx): ProjectAnalyzer
+}
+interface View << interface >> {
+  + displayRoots(List<Node<ProjectElementReport>>): void
+  + stop(): void
+  + apply(Controller, int, int): View
+  + start(String): void
+}
+class ViewImpl {
+  + start(String): void
+  + gui(): GraphicalUserInterface
+  + height(): int
+  + displayRoots(List<Node<ProjectElementReport>>): void
+  + width(): int
+  + controller(): Controller
+  + stop(): void
+}
+
+Application *-[#595959,plain]-> ControllerImpl
+Application *-[#595959,plain]-> ViewImpl
+ControllerImpl              -[#008200,dashed]-^  Controller                 
+ControllerImpl              +-[#820000,plain]-  Controller                 
+ControllerVerticleImpl     "1" *-[#595959,plain]-> "controller\n1" Controller
+ControllerVerticleImpl      +-[#820000,plain]-  ControllerVerticle         
+ControllerVerticleImpl      -[#008200,dashed]-^  ControllerVerticle
+ControllerImpl *-[#595959,plain]-> ProjectAnalyzer
+GraphicalUserInterfaceImpl  -[#008200,dashed]-^  GraphicalUserInterface
+GraphicalUserInterfaceImpl "1" *-[#595959,plain]-> "mainPanel\n1" MainPanelImpl              
+GraphicalUserInterfaceImpl "1" *-[#595959,plain]-> "view\n1" View                       
+MainPanelImpl               -[#008200,dashed]-^  MainPanel                  
+ViewImpl                   "1" *-[#595959,plain]-> "controller\n1" Controller                 
+ViewImpl                   "1" *-[#595959,plain]-> "gui\n1" GraphicalUserInterface     
+ViewImpl                    -[#008200,dashed]-^  View                       
+ViewImpl                    +-[#820000,plain]-  View                       
+@enduml

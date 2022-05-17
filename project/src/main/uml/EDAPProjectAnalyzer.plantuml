@@ -1,0 +1,86 @@
+@startuml
+
+!theme plain
+
+class AbstractCollector {
+  + visit(FieldDeclaration, FileReport): void
+  + methodVisibility_(MutableMethodInfoImpl, MethodDeclaration): void
+  + generateInterfaceReportIfNotPresent(String, String, FileReport): void
+  + visit(MethodDeclaration, FileReport): void
+  + generateClassReportIfNotPresent(String, String, FileReport): void
+  + publishOnEventBus(String, String): void
+}
+interface ClassReport << interface >> {
+  + isMainClass(): boolean
+  + methodsInfo(): List<MethodInfo>
+  + fieldsInfo(): List<FieldInfo>
+}
+class EventBusCollector {
+  + vertx(): Vertx
+  + publishOnEventBus(String, String): void
+}
+interface FieldInfo << interface >> {
+  + fieldType(): String
+}
+class FutureCollector {
+  + publishOnEventBus(String, String): void
+}
+interface InterfaceReport << interface >> {
+  + methodsInfo(): List<String>
+}
+interface MethodInfo << interface >> {
+  + visibility(): Visibility
+  + beginLine(): int
+  + endLine(): int
+}
+interface PackageReport << interface >> {
+  + classes(): List<ClassReport>
+  + interfaces(): List<InterfaceReport>
+}
+interface ProjectAnalyzer << interface >> {
+  + analyzeProject(String): void
+  + projectReport(String): Future<ProjectReport>
+  + packageReport(String): Future<PackageReport>
+  + interfaceReport(String): Future<List<InterfaceReport>>
+  + classReport(String): Future<List<ClassReport>>
+  + apply(Vertx): ProjectAnalyzer
+}
+
+interface ProjectElementReport << interface >> {
+  + fullName(): String
+  + parentID(): Option<String>
+  + toJson(): String
+  + name(): String
+  + elementType(): ProjectElementType
+}
+
+class ProjectElementType {
+  + ordinal(): int
+}
+interface ProjectReport << interface >> {
+  + classReport(String): Option<ClassReport>
+  + packagesReport(): List<PackageReport>
+  + interfaceReport(String): Option<InterfaceReport>
+}
+class Visibility {
+  + ordinal(): int
+}
+
+ClassReport           -[#008200,plain]-^  ProjectElementReport 
+FieldInfo             -[#008200,plain]-^  ProjectElementReport 
+InterfaceReport       -[#008200,plain]-^  ProjectElementReport 
+MethodInfo            -[#008200,plain]-^  ProjectElementReport 
+PackageReport         -[#008200,plain]-^  ProjectElementReport 
+EventBusCollector -[#008200,plain]-^ AbstractCollector
+FutureCollector -[#008200,plain]-^ AbstractCollector
+ProjectAnalyzer *-[#595959,plain]-> FutureCollector
+ProjectAnalyzer *-[#595959,plain]-> EventBusCollector
+ProjectAnalyzer *-[#595959,plain]-> ProjectReport
+ProjectAnalyzer *-[#595959,plain]-> PackageReport
+ProjectAnalyzer *-[#595959,plain]-> ClassReport
+ProjectAnalyzer *-[#595959,plain]-> InterfaceReport
+
+FieldInfo *-[#595959,plain]-> Visibility
+ProjectElementReport *-[#595959,plain]-> ProjectElementType
+
+@enduml

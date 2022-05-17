@@ -1,0 +1,90 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype polyline
+
+interface Controller << interface >> {
+  + stopSimulation(): void
+  + setView(View): void
+  + startSimulation(): void
+}
+class ControllerImpl {
+  + stopSimulation(): void
+  + setView(View): void
+  + updateView(long): void
+  + startSimulation(): void
+}
+class GraphicalView {
+  + stopSimulation(): void
+  + startSimulation(): void
+  + display(List<Point2D>, double, long, Boundary): void
+}
+interface Model << interface >> {
+  + incrementVirtualTime(): void
+  + getBounds(): Boundary
+  + getVirtualTime(): double
+  + checkAndSolveBoundaryCollisionOnBodiesRange(Pair<Integer, Integer>): void
+  + updatePositionOnBodiesRange(Pair<Integer, Integer>): void
+  + getBodiesPositions(): List<Point2D>
+  + getTimeStep(): double
+  + getBodiesNumber(): int
+  + computeAccelerationOnBodiesRange(Pair<Integer, Integer>): List<Vector2D>
+  + updateSpeedOnBodiesRange(Pair<Integer, Integer>, List<Vector2D>): void
+}
+class ModelImpl {
+  + getBounds(): Boundary
+  + getBodiesNumber(): int
+  + getBodiesPositions(): List<Point2D>
+  + incrementVirtualTime(): void
+  + checkAndSolveBoundaryCollisionOnBodiesRange(Pair<Integer, Integer>): void
+  + updateSpeedOnBodiesRange(Pair<Integer, Integer>, List<Vector2D>): void
+  + generateBodies(int): void
+  + getVirtualTime(): double
+  + computeAccelerationOnBodiesRange(Pair<Integer, Integer>): List<Vector2D>
+  + computeAccelerationOnBody(Body): Vector2D
+  + getTimeStep(): double
+  + updatePositionOnBodiesRange(Pair<Integer, Integer>): void
+}
+class SimulationApp {
+  + main(String[]): void
+}
+class SimulationAppGUI {
+  + main(String[]): void
+}
+class SimulationGUI {
+  + display(List<Point2D>, double, long, Boundary): void
+}
+class SimulationService {
+  + run(): void
+  + generateTasks(int): Map<String, List<Callable<Boolean>>>
+  + stopSimulation(): void
+}
+interface View << interface >> {
+  + display(List<Point2D>, double, long, Boundary): void
+  + startSimulation(): void
+  + stopSimulation(): void
+}
+interface ViewController << interface >> {
+  + updateView(long): void
+}
+
+Controller         -[#008200,plain]-^  ViewController    
+ControllerImpl     -[#008200,dashed]-^  Controller        
+ControllerImpl    "1" *-[#595959,plain]-> "model\n1" Model             
+ControllerImpl    "1" *-[#595959,plain]-> "simulationService\n1" SimulationService 
+ControllerImpl     -[#595959,dashed]->  SimulationService : "«create»"
+GraphicalView     "1" *-[#595959,plain]-> "controller\n1" Controller        
+GraphicalView     "1" *-[#595959,plain]-> "frame\n1" SimulationGUI     
+GraphicalView      -[#595959,dashed]->  SimulationGUI     : "«create»"
+GraphicalView      -[#008200,dashed]-^  View              
+ModelImpl          -[#008200,dashed]-^  Model             
+SimulationApp      -[#595959,dashed]->  ControllerImpl    : "«create»"
+SimulationApp      -[#595959,dashed]->  ModelImpl         : "«create»"
+SimulationAppGUI   -[#595959,dashed]->  ControllerImpl    : "«create»"
+SimulationAppGUI   -[#595959,dashed]->  GraphicalView     : "«create»"
+SimulationAppGUI   -[#595959,dashed]->  ModelImpl         : "«create»"
+SimulationGUI     "1" *-[#595959,plain]-> "graphicalView\n1" GraphicalView     
+SimulationService "1" *-[#595959,plain]-> "model\n1" Model             
+SimulationService "1" *-[#595959,plain]-> "controller\n1" ViewController    
+@enduml

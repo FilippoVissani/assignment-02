@@ -1,0 +1,59 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class AbstractTask {
+  + getModel(): Model
+  + getRange(): Pair<Integer, Integer>
+}
+interface Chronometer << interface >> {
+  + getTime(): long
+  + start(): void
+  + stop(): void
+}
+class ChronometerImpl {
+  + start(): void
+  + getTime(): long
+  + stop(): void
+}
+interface Controller << interface >> {
+  + stopSimulation(): void
+  + setView(View): void
+  + startSimulation(): void
+}
+class ControllerImpl {
+  + stopSimulation(): void
+  + setView(View): void
+  + updateView(long): void
+  + startSimulation(): void
+}
+class SimulationService {
+  + run(): void
+  + generateTasks(int): Map<String, List<Callable<Boolean>>>
+  + stopSimulation(): void
+}
+class UpdatePositionTask {
+  + call(): Boolean
+}
+class UpdateSpeedTask {
+  + call(): Boolean
+}
+interface ViewController << interface >> {
+  + updateView(long): void
+}
+
+ChronometerImpl     -[#008200,dashed]-^  Chronometer        
+Controller          -[#008200,plain]-^  ViewController     
+ControllerImpl      -[#008200,dashed]-^  Controller         
+ControllerImpl     "1" *-[#595959,plain]-> "simulationService\n1" SimulationService  
+ControllerImpl      -[#595959,dashed]->  SimulationService  : "«create»"
+SimulationService  "1" *-[#595959,plain]-> "chronometer\n1" Chronometer        
+SimulationService   -[#595959,dashed]->  ChronometerImpl    : "«create»"
+SimulationService   -[#595959,dashed]->  UpdatePositionTask : "«create»"
+SimulationService   -[#595959,dashed]->  UpdateSpeedTask    : "«create»"
+SimulationService  "1" *-[#595959,plain]-> "controller\n1" ViewController     
+UpdatePositionTask  -[#000082,plain]-^  AbstractTask       
+UpdateSpeedTask     -[#000082,plain]-^  AbstractTask       
+@enduml

@@ -7,7 +7,7 @@ import java.awt.{BorderLayout, Component, FlowLayout}
 import javax.swing.*
 import scala.collection.mutable
 
-trait GraphicalUserInterface extends JFrame :
+trait GraphicalUserInterface extends JFrame:
   def displayRoots(roots: List[Node[ProjectElementReport]]): Unit
 
 class GraphicalUserInterfaceImpl(val view: View, width: Int, height: Int) extends GraphicalUserInterface :
