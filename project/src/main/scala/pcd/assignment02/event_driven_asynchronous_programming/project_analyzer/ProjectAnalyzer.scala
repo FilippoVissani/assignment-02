@@ -127,12 +127,6 @@ object ProjectAnalyzer:
         File(packagePath).listFiles().toList.filter(f => f.isFile).foreach(f => filesReport.add(analyzeClassOrInterfaceEventBus(f.getPath)))
         CompositeFuture.all(filesReport).onSuccess(result => {
           val packageReport: MutablePackageReportImpl = MutablePackageReportImpl()
-          result.result().list().asScala.foreach(e => e match
-            case fileReport: FileReport => packageReport.classes_(packageReport.classes.appendedAll(fileReport.classesReport))
-            case _ => throw Exception(""))
-          result.result().list().asScala.foreach(e => e match
-            case fileReport: FileReport => packageReport.interfaces_(packageReport.interfaces.appendedAll(fileReport.interfacesReport))
-            case _ => throw Exception(""))
           val absolutePath = File(packagePath).getAbsolutePath
           packageReport.name_(absolutePath.substring(absolutePath.lastIndexOf('/') + 1))
           packageReport.elementType_(ProjectElementType.Package)
