@@ -1,9 +1,5 @@
 @startuml
 
-!theme plain
-top to bottom direction
-skinparam linetype ortho
-
 interface Node<A> << interface >> {
   + addChildren(List<Node<A>>): Node<A>
   + addChild(Node<A>): Node<A>

@@ -1,8 +1,4 @@
 @startuml
-
-!theme plain
-top to bottom direction
-
 class Application {
   + main(): void
 }

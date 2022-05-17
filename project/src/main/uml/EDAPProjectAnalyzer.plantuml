@@ -1,7 +1,5 @@
 @startuml
 
-!theme plain
-
 class AbstractCollector {
   + visit(FieldDeclaration, FileReport): void
   + methodVisibility_(MutableMethodInfoImpl, MethodDeclaration): void

@@ -1,9 +1,5 @@
 @startuml
 
-!theme plain
-top to bottom direction
-skinparam linetype polyline
-
 interface Controller << interface >> {
   + stopSimulation(): void
   + setView(View): void

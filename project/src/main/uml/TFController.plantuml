@@ -1,9 +1,5 @@
 @startuml
 
-!theme plain
-top to bottom direction
-skinparam linetype ortho
-
 class AbstractTask {
   + getModel(): Model
   + getRange(): Pair<Integer, Integer>
