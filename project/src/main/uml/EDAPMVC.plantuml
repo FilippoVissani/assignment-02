@@ -11,49 +11,17 @@ interface Controller << interface >> {
   + startProjectAnalysis(String): void
   + stopProjectAnalysis(): void
 }
-class ControllerImpl {
-  + view_(View): void
-  + stopVerticle(): void
-  + vertx(): Vertx
-  + stopProjectAnalysis(): void
-  + _view(): Option<View>
-  + startVerticle(): void
-  + displayRoots(List<Node<ProjectElementReport>>): void
-  + startProjectAnalysis(String): void
-}
+class ControllerImpl
 interface ControllerVerticle << interface >> {
   + apply(Controller): ControllerVerticle
 }
-class ControllerVerticleImpl {
-  + _treeGenerator(): TreeGenerator<ProjectElementReport>
-  + controller(): Controller
-  + start(Promise<Void>): void
-  + addNode(String): void
-}
+class ControllerVerticleImpl
 interface GraphicalUserInterface << interface >> {
   + displayRoots(List<Node<ProjectElementReport>>): void
 }
-class GraphicalUserInterfaceImpl {
-  + mainPanel(): MainPanelImpl
-  + view(): View
-  + displayRoots(List<Node<ProjectElementReport>>): void
-}
+class GraphicalUserInterfaceImpl
 interface MainPanel << interface >>
-class MainPanelImpl {
-  + fields(): JLabel
-  + stopButton(): JButton
-  + bottomPane(): JPanel
-  + path(): JTextField
-  + methods(): JLabel
-  + topPane(): JPanel
-  + interfaces(): JLabel
-  + classes(): JLabel
-  + packages(): JLabel
-  + centerPane(): JScrollPane
-  + filesButton(): JButton
-  + startButton(): JButton
-  + report(): JTextArea
-}
+class MainPanelImpl
 interface ProjectAnalyzer << interface >> {
   + analyzeProject(String): void
   + projectReport(String): Future<ProjectReport>
@@ -68,15 +36,7 @@ interface View << interface >> {
   + apply(Controller, int, int): View
   + start(String): void
 }
-class ViewImpl {
-  + start(String): void
-  + gui(): GraphicalUserInterface
-  + height(): int
-  + displayRoots(List<Node<ProjectElementReport>>): void
-  + width(): int
-  + controller(): Controller
-  + stop(): void
-}
+class ViewImpl
 
 Application *-[#595959,plain]-> ControllerImpl
 Application *-[#595959,plain]-> ViewImpl

@@ -10,32 +10,13 @@ interface Node<A> << interface >> {
   + apply(A, List<Node<A>>): Node<A>
   + element(): A
 }
-class NodeImpl<A> {
-  + element(): A
-  + productElementName(int): String
-  + nodeToString(StringBuilder, String): void
-  + productElementNames(): Iterator<String>
-  + map(Function1<A, B>): Node<B>
-  + unapply(NodeImpl<A>): Option<Tuple2<A, List<Node<A>>>>
-  + children(): List<Node<A>>
-  + productPrefix(): String
-  + addChildren(List<Node<A>>): Node<A>
-  + productIterator(): Iterator<Object>
-  + addChild(Node<A>): Node<A>
-  + copy(A, List<Node<A>>): NodeImpl<A>
-  + foreach(Function1<A, BoxedUnit>): void
-  + apply(A, List<Node<A>>): NodeImpl<A>
-}
+class NodeImpl<A>
 interface TreeGenerator<A> << interface >> {
   + generateTree(Function2<A, A, Object>): List<Node<A>>
   + apply(Ordering<A>): TreeGenerator<A>
   + addNode(Node<A>): void
 }
-class TreeGeneratorImpl<A> {
-  + generateTree(Function2<A, A, Object>): List<Node<A>>
-  + addNode(Node<A>): void
-  + _nodes(): List<Node<A>>
-}
+class TreeGeneratorImpl<A>
 
 NodeImpl           -[#008200,dashed]-^  Node              
 NodeImpl           +-[#820000,plain]-  Node

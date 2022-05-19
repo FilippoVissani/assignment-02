@@ -1,13 +1,6 @@
 @startuml
 
-class AbstractCollector {
-  + visit(FieldDeclaration, FileReport): void
-  + methodVisibility_(MutableMethodInfoImpl, MethodDeclaration): void
-  + generateInterfaceReportIfNotPresent(String, String, FileReport): void
-  + visit(MethodDeclaration, FileReport): void
-  + generateClassReportIfNotPresent(String, String, FileReport): void
-  + publishOnEventBus(String, String): void
-}
+class AbstractCollector
 interface ClassReport << interface >> {
   + isMainClass(): boolean
   + methodsInfo(): List<MethodInfo>
