@@ -10,6 +10,6 @@ lazy val root = (project in file("."))
       libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.24.2",
       libraryDependencies += "io.vertx" % "vertx-core" % "4.2.6",
       libraryDependencies += "com.googlecode.json-simple" % "json-simple" % "1.1.1",
-      libraryDependencies += "io.reactivex.rxjava3" % "rxjava" % "3.1.4"
+      libraryDependencies += "io.reactivex.rxjava3" % "rxjava" % "3.1.7"
 
 )
